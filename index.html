@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpiceRoute Catering | Authentic Bangladeshi Flavors, Memorable Events</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-red: #DC2626;
+            --deep-red: #991B1B;
+            --bright-orange: #FF8C00;
+            --golden-yellow: #FACC15;
+            --dark-green: #006400;
+            --deep-green: #15803D;
+            --cream: #FFFBEB;
+            --dark: #1F2937;
+            --light-gray: #F3F4F6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--bright-orange) 100%);
+            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            position: relative;
+            transition: all 0.3s ease;
+            padding: 0.5rem 0;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--golden-yellow);
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: var(--golden-yellow);
+            transform: translateY(-2px);
+        }
+
+        .mobile-menu {
+            display: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Page Sections */
+        .page {
+            display: none;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Home Page Styles */
+        .hero {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(249, 115, 22, 0.8) 100%), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><rect fill="%23DC2626" width="1200" height="600"/><circle fill="%23F97316" cx="200" cy="300" r="150" opacity="0.3"/><circle fill="%23FACC15" cx="1000" cy="200" r="100" opacity="0.3"/></svg>');
+            background-size: cover;
+            background-position: center;
+            height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.05) 10px,
+                rgba(255,255,255,0.05) 20px
+            );
+            animation: slide 20s linear infinite;
+        }
+
+        @keyframes slide {
+            0% { transform: translate(-50%, -50%); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            padding: 0 2rem;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            animation: slideUp 0.8s ease;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            animation: slideUp 0.8s ease 0.2s backwards;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: slideUp 0.8s ease 0.4s backwards;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--fresh-green);
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: var(--deep-green);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.6);
+        }
+
+        .btn-secondary {
+            background: var(--golden-yellow);
+            color: var(--dark);
+            box-shadow: 0 4px 15px rgba(250, 204, 21, 0.4);
+        }
+
+        .btn-secondary:hover {
+            background: #EAB308;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(250, 204, 21, 0.6);
+        }
+
+        .features {
+            padding: 5rem 2rem;
+            background: var(--cream);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--deep-red);
+            margin-bottom: 3rem;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-red), var(--golden-yellow));
+            margin: 1rem auto;
+            border-radius: 2px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-top: 5px solid var(--primary-red);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(220,38,38,0.05) 0%, rgba(249,115,22,0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(220, 38, 38, 0.15);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-red);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            color: var(--deep-red);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Gallery Page */
+        .gallery-section {
+            padding: 4rem 2rem;
+            background: linear-gradient(180deg, var(--cream) 0%, white 100%);
+            min-height: 100vh;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            cursor: pointer;
+            height: 300px;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--bright-orange) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(220, 38, 38, 0.3);
+        }
+
+        .gallery-item i {
+            font-size: 4rem;
+            color: rgba(255,255,255,0.9);
+            transition: all 0.3s ease;
+        }
+
+        .gallery-item:hover i {
+            transform: scale(1.2);
+            color: white;
+        }
+
+        .gallery-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 2rem 1.5rem 1.5rem;
+            color: white;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover .gallery-overlay {
+            transform: translateY(0);
+        }
+
+        /* Menu Page */
+        .menu-section {
+            padding: 4rem 2rem;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .notification-banner {
+            background: linear-gradient(90deg, var(--fresh-green) 0%, var(--deep-green) 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: pulse 2s infinite;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .menu-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .menu-tab {
+            padding: 0.8rem 1.5rem;
+            background: white;
+            border: 2px solid var(--primary-red);
+            color: var(--primary-red);
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .menu-tab.active, .menu-tab:hover {
+            background: var(--primary-red);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+
+        .menu-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .menu-content.active {
+            display: block;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border-left: 5px solid var(--bright-orange);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, rgba(249,115,22,0.1) 0%, transparent 100%);
+            transition: width 0.3s ease;
+        }
+
+        .menu-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 8px 25px rgba(249, 115, 22, 0.2);
+        }
+
+        .menu-item:hover::before {
+            width: 100%;
+        }
+
+        .menu-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-item h3 {
+            color: var(--deep-red);
+            font-size: 1.3rem;
+        }
+
+        .price {
+            color: var(--fresh-green);
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+        }
+
+        .badge-veg {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--deep-green);
+        }
+
+        .badge-spicy {
+            background: rgba(220, 38, 38, 0.2);
+            color: var(--deep-red);
+        }
+
+        .badge-new {
+            background: var(--golden-yellow);
+            color: var(--dark);
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Contact/Subscription Page */
+        .contact-section {
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, var(--cream) 0%, white 50%, rgba(34,197,94,0.1) 100%);
+            min-height: 100vh;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .subscription-box {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--bright-orange) 100%);
+            padding: 3rem;
+            border-radius: 20px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(220, 38, 38, 0.3);
+        }
+
+        .subscription-box h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .subscription-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.95);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px var(--golden-yellow);
+            transform: scale(1.02);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .contact-info-box {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-top: 5px solid var(--fresh-green);
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .contact-item:hover {
+            background: var(--light-gray);
+            transform: translateX(5px);
+        }
+
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--fresh-green) 0%, var(--deep-green) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .contact-item h4 {
+            color: var(--deep-red);
+            margin-bottom: 0.3rem;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--dark) 0%, #111 100%);
+            color: white;
+            padding: 3rem 2rem 1rem;
+            margin-top: 0;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            color: var(--golden-yellow);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--bright-orange) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-5px) rotate(360deg);
+            box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.6);
+            margin-top: 1rem;
+            border: 2px dashed rgba(255,255,255,0.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: linear-gradient(135deg, var(--primary-red) 0%, var(--bright-orange) 100%);
+                flex-direction: column;
+                padding: 1rem;
+                gap: 1rem;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        .slide-up {
+            animation: slideUp 0.8s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Constant Header -->
+    <header>
+        <nav>
+            <a href="#" class="logo" onclick="showPage('home')">
+                <i class="fas fa-utensils"></i>
+                Boithok Khana
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#" onclick="showPage('home')" class="nav-link">Home</a></li>
+                <li><a href="#" onclick="showPage('gallery')" class="nav-link">Gallery</a></li>
+                <li><a href="#" onclick="showPage('menu')" class="nav-link">Menu & Updates</a></li>
+                <li><a href="#" onclick="showPage('contact')" class="nav-link">Subscribe & Contact</a></li>
+            </ul>
+            <div class="mobile-menu" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Home Page -->
+    <div id="home" class="page active">
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="floating">Authentic Bangladeshi Flavors for Regular and Memorable Events</h1>
+                <p>Premium catering services bringing the tradition, culture and the spice of innovation to your special daily and occasional programs</p>
+                <div class="cta-buttons">
+                    <a href="#" class="btn btn-primary" onclick="showPage('menu')">Our Menu</a>
+                    <a href="#" class="btn btn-secondary" onclick="showPage('contact')">Request a Quote</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <h2 class="section-title">Why Choose Boithok Khana?</h2>
+                <div class="feature-grid">
+                    <div class="feature-card slide-up">
+                        <div class="feature-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <h3>Authentic Home Recipes</h3>
+                        <p>Traditional family recipes passed through generations, prepared with current needs, style and the freshest ingredients.</p>
+                    </div>
+                    <div class="feature-card slide-up" style="animation-delay: 0.2s">
+                        <div class="feature-icon">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h3>Fresh & Local</h3>
+                        <p>We source our vegetables and meats from local suppliers, ensuring quality while supporting our community.</p>
+                    </div>
+                    <div class="feature-card slide-up" style="animation-delay: 0.4s">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>The Service</h3>
+                        <p>We do Program Catering, Weekly Meals and Customized Preparations. Our professional team handles everything so you can enjoy your event and time stress-free.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section style="padding: 4rem 2rem; background: linear-gradient(135deg, var(--fresh-green) 0%, var(--deep-green) 100%); color: white; text-align: center;">
+            <div class="container">
+                <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">Ready to add Spice to your event?</h2>
+                <p style="font-size: 1.3rem; margin-bottom: 2rem;">Book now and get 10% off your first catering order!</p>
+                <a href="#" class="btn btn-secondary" onclick="showPage('contact')" style="font-size: 1.2rem; padding: 1.2rem 3rem;">Start Your Order</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Gallery Page -->
+    <div id="gallery" class="page">
+        <section class="gallery-section">
+            <div class="container">
+                <h2 class="section-title">Our Culinary Gallery</h2>
+                <p style="text-align: center; color: #666; margin-bottom: 2rem;">Hover over images to see details</p>
+                
+                <div class="gallery-grid">
+                    <div class="gallery-item">
+                        <i class="fas fa-drumstick-bite"></i>
+                        <div class="gallery-overlay">
+                            <h3>Tandoori Platter</h3>
+                            <p>Signature spiced meats slow-cooked in traditional clay oven</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item" style="background: linear-gradient(135deg, var(--golden-yellow) 0%, var(--bright-orange) 100%);">
+                        <i class="fas fa-bowl-rice"></i>
+                        <div class="gallery-overlay">
+                            <h3>Biryani Feast</h3>
+                            <p>Aromatic basmati rice with saffron and tender lamb</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item" style="background: linear-gradient(135deg, var(--fresh-green) 0%, var(--deep-green) 100%);">
+                        <i class="fas fa-carrot"></i>
+                        <div class="gallery-overlay">
+                            <h3>Farm Fresh Salads</h3>
+                            <p>Organic vegetables with house-made dressings</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item" style="background: linear-gradient(135deg, #9333EA 0%, #DC2626 100%);">
+                        <i class="fas fa-cookie-bite"></i>
+                        <div class="gallery-overlay">
+                            <h3>Dessert Spread</h3>
+                            <p>Traditional sweets and modern pastry fusion</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item" style="background: linear-gradient(135deg, var(--bright-orange) 0%, var(--primary-red) 100%);">
+                        <i class="fas fa-glass-cheers"></i>
+                        <div class="gallery-overlay">
+                            <h3>Beverage Station</h3>
+                            <p>Refreshing mocktails and traditional drinks</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item" style="background: linear-gradient(135deg, var(--deep-red) 0%, #7F1D1D 100%);">
+                        <i class="fas fa-utensils"></i>
+                        <div class="gallery-overlay">
+                            <h3>Buffet Setup</h3>
+                            <p>Elegant presentation for corporate events</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Menu & Notifications Page -->
+    <div id="menu" class="page">
+        <section class="menu-section">
+            <div class="container">
+                <h2 class="section-title">Our Menu & Latest Updates</h2>
+                
+                <div class="notification-banner">
+                    <i class="fas fa-bell" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Special Offer!</strong> Free dessert platter with every wedding catering booking this month! 
+                        <span style="opacity: 0.9; font-size: 0.9rem;">(Valid until March 31st)</span>
+                    </div>
+                </div>
+
+                <div class="notification-banner" style="background: linear-gradient(90deg, var(--golden-yellow) 0%, var(--bright-orange) 100%); color: var(--dark); animation: none;">
+                    <i class="fas fa-calendar-alt" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>New!</strong> Spring Menu launching April 1st featuring fresh asparagus dishes and strawberry desserts!
+                    </div>
+                </div>
+
+                <div class="menu-tabs">
+                    <button class="menu-tab active" onclick="showMenu('appetizers')">Appetizers</button>
+                    <button class="menu-tab" onclick="showMenu('mains')">Main Courses</button>
+                    <button class="menu-tab" onclick="showMenu('desserts')">Desserts</button>
+                    <button class="menu-tab" onclick="showMenu('packages')">Event Packages</button>
+                </div>
+
+                <div id="appetizers" class="menu-content active">
+                    <div class="menu-grid">
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Samosa Trio</h3>
+                                <span class="price">$8</span>
+                            </div>
+                            <p>Crispy pastries filled with spiced potatoes, peas, and lentils</p>
+                            <span class="badge badge-veg"><i class="fas fa-leaf"></i> Vegetarian</span>
+                            <span class="badge badge-new">NEW</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Spicy Chicken Wings</h3>
+                                <span class="price">$12</span>
+                            </div>
+                            <p>Tandoori marinated wings with mint chutney</p>
+                            <span class="badge badge-spicy"><i class="fas fa-pepper-hot"></i> Spicy</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Vegetable Pakora</h3>
+                                <span class="price">$7</span>
+                            </div>
+                            <p>Mixed vegetables in chickpea batter, deep fried to perfection</p>
+                            <span class="badge badge-veg"><i class="fas fa-leaf"></i> Vegetarian</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="mains" class="menu-content">
+                    <div class="menu-grid">
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Butter Chicken</h3>
+                                <span class="price">$18</span>
+                            </div>
+                            <p>Creamy tomato curry with tender chicken pieces</p>
+                            <span class="badge badge-new">Chef's Choice</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Lamb Rogan Josh</h3>
+                                <span class="price">$22</span>
+                            </div>
+                            <p>Aromatic Kashmiri curry with tender lamb chunks</p>
+                            <span class="badge badge-spicy"><i class="fas fa-pepper-hot"></i> Medium Spicy</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Paneer Tikka Masala</h3>
+                                <span class="price">$16</span>
+                            </div>
+                            <p>Grilled cottage cheese in rich tomato gravy</p>
+                            <span class="badge badge-veg"><i class="fas fa-leaf"></i> Vegetarian</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Seafood Biryani</h3>
+                                <span class="price">$24</span>
+                            </div>
+                            <p>Saffron rice with shrimp, fish, and exotic spices</p>
+                            <span class="badge badge-new">Popular</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="desserts" class="menu-content">
+                    <div class="menu-grid">
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Gulab Jamun</h3>
+                                <span class="price">$6</span>
+                            </div>
+                            <p>Warm milk dumplings soaked in rose-scented syrup</p>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Mango Kulfi</h3>
+                                <span class="price">$5</span>
+                            </div>
+                            <p>Traditional Indian ice cream with fresh mango pulp</p>
+                            <span class="badge badge-new">Seasonal</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Rasmalai</h3>
+                                <span class="price">$7</span>
+                            </div>
+                            <p>Soft cheese patties in cardamom-flavored milk</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="packages" class="menu-content">
+                    <div class="menu-grid">
+                        <div class="menu-item" style="border-left-color: var(--fresh-green);">
+                            <div class="menu-item-header">
+                                <h3>Corporate Lunch Package</h3>
+                                <span class="price" style="color: var(--deep-green);">$25/person</span>
+                            </div>
+                            <p>Includes 2 appetizers, 3 main courses, rice, bread, and dessert. Perfect for office meetings and seminars.</p>
+                            <span class="badge badge-veg">Customizable</span>
+                        </div>
+                        <div class="menu-item" style="border-left-color: var(--primary-red);">
+                            <div class="menu-item-header">
+                                <h3>Wedding Feast Package</h3>
+                                <span class="price">$45/person</span>
+                            </div>
+                            <p>Grand buffet setup with 5 appetizers, 6 main courses, live station, and dessert bar. Includes service staff.</p>
+                            <span class="badge badge-new">15% OFF this month!</span>
+                        </div>
+                        <div class="menu-item" style="border-left-color: var(--golden-yellow);">
+                            <div class="menu-item-header">
+                                <h3>Birthday Party Pack</h3>
+                                <span class="price">$20/person</span>
+                            </div>
+                            <p>Kid-friendly options with mild spices, pizza options, and fun dessert platters. Minimum 20 guests.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Contact & Subscription Page -->
+    <div id="contact" class="page">
+        <section class="contact-section">
+            <div class="container">
+                <h2 class="section-title">Subscribe & Connect With Us</h2>
+                
+                <div class="contact-grid">
+                    <div class="subscription-box">
+                        <h2><i class="fas fa-envelope-open-text"></i> Join Our Food Family</h2>
+                        <p>Subscribe for exclusive offers, new menu updates, and catering tips!</p>
+                        
+                        <form class="subscription-form" onsubmit="handleSubscribe(event)">
+                            <div class="form-group">
+                                <input type="text" placeholder="Your Name" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" placeholder="Email Address" required>
+                            </div>
+                            <div class="form-group">
+                                <select style="width: 100%; padding: 1rem; border-radius: 10px; border: none;">
+                                    <option value="">Interested in...</option>
+                                    <option value="wedding">Wedding Catering</option>
+                                    <option value="corporate">Corporate Events</option>
+                                    <option value="party">Private Parties</option>
+                                    <option value="weekly">Weekly Meal Service</option>
+                                </select>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="newsletter">
+                                <label for="newsletter">Send me weekly menu updates and special offers</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                                Subscribe Now <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+
+                        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.3);">
+                            <h3 style="margin-bottom: 1rem;"><i class="fas fa-comment-dots"></i> Quick Inquiry</h3>
+                            <div class="form-group">
+                                <textarea rows="3" placeholder="Tell us about your event..." style="resize: none;"></textarea>
+                            </div>
+                            <button class="btn btn-secondary" style="width: 100%;">Send Message</button>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-box">
+                        <h3 style="color: var(--deep-red); margin-bottom: 1.5rem; font-size: 1.5rem;">
+                            <i class="fas fa-address-card"></i> Contact Information
+                        </h3>
+                        
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div>
+                                <h4>Phone</h4>
+                                <p>(555) 123-SPICE<br>
+                                <small style="color: #666;">Mon-Sat: 9AM - 8PM</small></p>
+                            </div>
+                        </div>
+
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <h4>Email</h4>
+                                <p>hello@spiceroute.catering<br>
+                                <small style="color: #666;">We reply within 24 hours</small></p>
+                            </div>
+                        </div>
+
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h4>Location</h4>
+                                <p>123 Culinary Avenue<br>
+                                Food District, FC 12345<br>
+                                <small style="color: var(--fresh-green);"><i class="fas fa-truck"></i> We deliver within 50 miles</small></p>
+                            </div>
+                        </div>
+
+                        <div class="contact-item">
+                            <div class="contact-icon" style="background: linear-gradient(135deg, var(--golden-yellow) 0%, var(--bright-orange) 100%);">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <h4>Office Hours</h4>
+                                <p>Monday - Friday: 9:00 AM - 6:00 PM<br>
+                                Saturday: 10:00 AM - 4:00 PM<br>
+                                Sunday: Closed</p>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; padding: 1.5rem; background: var(--light-gray); border-radius: 10px; border-left: 4px solid var(--primary-red);">
+                            <h4 style="color: var(--deep-red); margin-bottom: 0.5rem;"><i class="fas fa-info-circle"></i> Quick Response Guarantee</h4>
+                            <p style="font-size: 0.9rem; color: #666;">For urgent catering needs within 48 hours, please call us directly. We specialize in last-minute events!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Constant Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>SpiceRoute Catering</h3>
+                <p>Bringing authentic flavors coupled with professional service to you since 2022.</p>
+                <div class="social-links">
+                    <a href="https://facebook.com" target="_blank" title="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://instagram.com" target="_blank" title="Instagram" style="background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="tel:+15551237742" title="Call Us" style="background: linear-gradient(135deg, var(--fresh-green) 0%, var(--deep-green) 100%);">
+                        <i class="fas fa-phone"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contact Info</h3>
+                <p style="margin-bottom: 0.5rem;"><i class="fas fa-phone" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> +1(437) 993-1626</p>
+                <p style="margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> 824 Florell Dr, Oshawa, ON</p>
+                <p style="margin-bottom: 0.5rem;"><i class="fas fa-envelope" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> info@boithokkhana.ca</p>
+                <div class="map-placeholder">
+                    <i class="fas fa-map" style="font-size: 2rem; margin-right: 0.5rem;"></i>
+                    <span>Interactive Map Loading...</span>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul style="list-style: none; line-height: 2;">
+                    <li><a href="#" onclick="showPage('home')" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s;">Home</a></li>
+                    <li><a href="#" onclick="showPage('gallery')" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s;">Gallery</a></li>
+                    <li><a href="#" onclick="showPage('menu')" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s;">Menu</a></li>
+                    <li><a href="#" onclick="showPage('contact')" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s;">Contact</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Newsletter</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 1rem;">Get seasonal recipes and exclusive offers!</p>
+                <form onsubmit="event.preventDefault(); alert('Thanks for subscribing!');" style="display: flex; gap: 0.5rem;">
+                    <input type="email" placeholder="Email" style="padding: 0.5rem; border-radius: 5px; border: none; flex: 1;">
+                    <button type="submit" style="padding: 0.5rem 1rem; background: var(--golden-yellow); border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2024 SpiceRoute Catering. All rights reserved. | Designed with <i class="fas fa-heart" style="color: var(--primary-red);"></i> and spices</p>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation Functions
+        function showPage(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Close mobile menu if open
+            document.getElementById('navLinks').classList.remove('active');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function toggleMenu() {
+            document.getElementById('navLinks').classList.toggle('active');
+        }
+
+        // Menu Tab Functions
+        function showMenu(menuId) {
+            // Hide all menu contents
+            const contents = document.querySelectorAll('.menu-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.menu-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected menu and activate tab
+            document.getElementById(menuId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Form Handling
+        function handleSubscribe(e) {
+            e.preventDefault();
+            alert('Welcome to the SpiceRoute family! Check your email for a 10% welcome discount.');
+            e.target.reset();
+        }
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.style.boxShadow = '0 4px 30px rgba(220, 38, 38, 0.4)';
+            } else {
+                header.style.boxShadow = '0 4px 20px rgba(220, 38, 38, 0.3)';
+            }
+        });
+
+        // Add smooth scrolling for all links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+            });
+        });
+
+        // Initialize with animation
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('SpiceRoute Catering Website Loaded');
+        });
+    </script>
+</body>
+</html>
