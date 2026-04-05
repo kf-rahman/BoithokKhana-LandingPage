@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpiceRoute Catering | Authentic Bangladeshi Flavors, Memorable Events</title>
+    <title>Boithok Khana | Authentic Bangladeshi Flavors, Memorable Events</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -18,6 +18,7 @@
             --bright-orange: #FF8C00;
             --golden-yellow: #FACC15;
             --dark-green: #006400;
+            --fresh-green: #22C55E;
             --deep-green: #15803D;
             --cream: #FFFBEB;
             --dark: #1F2937;
@@ -884,23 +885,23 @@
                 <div class="notification-banner">
                     <i class="fas fa-bell" style="font-size: 1.5rem;"></i>
                     <div>
-                        <strong>Special Offer!</strong> Free dessert platter with every wedding catering booking this month! 
-                        <span style="opacity: 0.9; font-size: 0.9rem;">(Valid until March 31st)</span>
+                        <strong>Special Offer!</strong> Free dessert platter with every wedding catering booking this month!
+                        <span style="opacity: 0.9; font-size: 0.9rem;">(Valid until April 30th)</span>
                     </div>
                 </div>
 
                 <div class="notification-banner" style="background: linear-gradient(90deg, var(--golden-yellow) 0%, var(--bright-orange) 100%); color: var(--dark); animation: none;">
                     <i class="fas fa-calendar-alt" style="font-size: 1.5rem;"></i>
                     <div>
-                        <strong>New!</strong> Spring Menu launching April 1st featuring fresh asparagus dishes and strawberry desserts!
+                        <strong>New!</strong> Spring Menu now available featuring fresh asparagus dishes and strawberry desserts!
                     </div>
                 </div>
 
                 <div class="menu-tabs">
-                    <button class="menu-tab active" onclick="showMenu('appetizers')">Appetizers</button>
-                    <button class="menu-tab" onclick="showMenu('mains')">Main Courses</button>
-                    <button class="menu-tab" onclick="showMenu('desserts')">Desserts</button>
-                    <button class="menu-tab" onclick="showMenu('packages')">Event Packages</button>
+                    <button class="menu-tab active" onclick="showMenu('appetizers', this)">Appetizers</button>
+                    <button class="menu-tab" onclick="showMenu('mains', this)">Main Courses</button>
+                    <button class="menu-tab" onclick="showMenu('desserts', this)">Desserts</button>
+                    <button class="menu-tab" onclick="showMenu('packages', this)">Event Packages</button>
                 </div>
 
                 <div id="appetizers" class="menu-content active">
@@ -1064,13 +1065,13 @@
                             </button>
                         </form>
 
-                        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.3);">
+                        <form style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.3);" onsubmit="handleInquiry(event)">
                             <h3 style="margin-bottom: 1rem;"><i class="fas fa-comment-dots"></i> Quick Inquiry</h3>
                             <div class="form-group">
-                                <textarea rows="3" placeholder="Tell us about your event..." style="resize: none;"></textarea>
+                                <textarea rows="3" placeholder="Tell us about your event..." style="resize: none;" required></textarea>
                             </div>
-                            <button class="btn btn-secondary" style="width: 100%;">Send Message</button>
-                        </div>
+                            <button type="submit" class="btn btn-secondary" style="width: 100%;">Send Message</button>
+                        </form>
                     </div>
 
                     <div class="contact-info-box">
@@ -1084,7 +1085,7 @@
                             </div>
                             <div>
                                 <h4>Phone</h4>
-                                <p>(555) 123-SPICE<br>
+                                <p><a href="tel:+14379931626" style="color: inherit; text-decoration: none;">+1 (437) 993-1626</a><br>
                                 <small style="color: #666;">Mon-Sat: 9AM - 8PM</small></p>
                             </div>
                         </div>
@@ -1095,7 +1096,7 @@
                             </div>
                             <div>
                                 <h4>Email</h4>
-                                <p>hello@spiceroute.catering<br>
+                                <p><a href="mailto:info@boithokkhana.ca" style="color: inherit; text-decoration: none;">info@boithokkhana.ca</a><br>
                                 <small style="color: #666;">We reply within 24 hours</small></p>
                             </div>
                         </div>
@@ -1106,8 +1107,8 @@
                             </div>
                             <div>
                                 <h4>Location</h4>
-                                <p>123 Culinary Avenue<br>
-                                Food District, FC 12345<br>
+                                <p>824 Florell Dr<br>
+                                Oshawa, ON<br>
                                 <small style="color: var(--fresh-green);"><i class="fas fa-truck"></i> We deliver within 50 miles</small></p>
                             </div>
                         </div>
@@ -1138,16 +1139,16 @@
     <footer>
         <div class="footer-content">
             <div class="footer-section">
-                <h3>SpiceRoute Catering</h3>
+                <h3>Boithok Khana</h3>
                 <p>Bringing authentic flavors coupled with professional service to you since 2022.</p>
                 <div class="social-links">
-                    <a href="https://facebook.com" target="_blank" title="Facebook">
+                    <a href="#" onclick="alert('Facebook page coming soon!'); return false;" title="Facebook">
                         <i class="fab fa-facebook-f"></i>
                     </a>
-                    <a href="https://instagram.com" target="_blank" title="Instagram" style="background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);">
+                    <a href="#" onclick="alert('Instagram page coming soon!'); return false;" title="Instagram" style="background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);">
                         <i class="fab fa-instagram"></i>
                     </a>
-                    <a href="tel:+15551237742" title="Call Us" style="background: linear-gradient(135deg, var(--fresh-green) 0%, var(--deep-green) 100%);">
+                    <a href="tel:+14379931626" title="Call Us" style="background: linear-gradient(135deg, var(--fresh-green) 0%, var(--deep-green) 100%);">
                         <i class="fas fa-phone"></i>
                     </a>
                 </div>
@@ -1158,10 +1159,10 @@
                 <p style="margin-bottom: 0.5rem;"><i class="fas fa-phone" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> +1(437) 993-1626</p>
                 <p style="margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> 824 Florell Dr, Oshawa, ON</p>
                 <p style="margin-bottom: 0.5rem;"><i class="fas fa-envelope" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> info@boithokkhana.ca</p>
-                <div class="map-placeholder">
-                    <i class="fas fa-map" style="font-size: 2rem; margin-right: 0.5rem;"></i>
-                    <span>Interactive Map Loading...</span>
-                </div>
+                <a href="https://maps.google.com/?q=824+Florell+Dr+Oshawa+ON" target="_blank" class="map-placeholder" style="text-decoration: none; color: rgba(255,255,255,0.6); cursor: pointer;">
+                    <i class="fas fa-map-marker-alt" style="font-size: 2rem; margin-right: 0.5rem;"></i>
+                    <span>View on Google Maps</span>
+                </a>
             </div>
             
             <div class="footer-section">
@@ -1177,8 +1178,8 @@
             <div class="footer-section">
                 <h3>Newsletter</h3>
                 <p style="font-size: 0.9rem; margin-bottom: 1rem;">Get seasonal recipes and exclusive offers!</p>
-                <form onsubmit="event.preventDefault(); alert('Thanks for subscribing!');" style="display: flex; gap: 0.5rem;">
-                    <input type="email" placeholder="Email" style="padding: 0.5rem; border-radius: 5px; border: none; flex: 1;">
+                <form onsubmit="event.preventDefault(); alert('Thanks for subscribing!'); this.reset();" style="display: flex; gap: 0.5rem;">
+                    <input type="email" placeholder="Email" required style="padding: 0.5rem; border-radius: 5px; border: none; flex: 1;">
                     <button type="submit" style="padding: 0.5rem 1rem; background: var(--golden-yellow); border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
                         <i class="fas fa-arrow-right"></i>
                     </button>
@@ -1187,7 +1188,7 @@
         </div>
         
         <div class="footer-bottom">
-            <p>&copy; 2024 SpiceRoute Catering. All rights reserved. | Designed with <i class="fas fa-heart" style="color: var(--primary-red);"></i> and spices</p>
+            <p>&copy; 2025 Boithok Khana. All rights reserved. | Designed with <i class="fas fa-heart" style="color: var(--primary-red);"></i> and spices</p>
         </div>
     </footer>
 
@@ -1215,28 +1216,34 @@
         }
 
         // Menu Tab Functions
-        function showMenu(menuId) {
+        function showMenu(menuId, clickedTab) {
             // Hide all menu contents
             const contents = document.querySelectorAll('.menu-content');
             contents.forEach(content => {
                 content.classList.remove('active');
             });
-            
+
             // Remove active class from all tabs
             const tabs = document.querySelectorAll('.menu-tab');
             tabs.forEach(tab => {
                 tab.classList.remove('active');
             });
-            
+
             // Show selected menu and activate tab
             document.getElementById(menuId).classList.add('active');
-            event.target.classList.add('active');
+            clickedTab.classList.add('active');
         }
 
         // Form Handling
         function handleSubscribe(e) {
             e.preventDefault();
-            alert('Welcome to the SpiceRoute family! Check your email for a 10% welcome discount.');
+            alert('Welcome to the Boithok Khana family! Check your email for a 10% welcome discount.');
+            e.target.reset();
+        }
+
+        function handleInquiry(e) {
+            e.preventDefault();
+            alert('Thanks for your inquiry! We will get back to you within 24 hours.');
             e.target.reset();
         }
 
@@ -1259,7 +1266,7 @@
 
         // Initialize with animation
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('SpiceRoute Catering Website Loaded');
+            console.log('Boithok Khana Website Loaded');
         });
     </script>
 </body>
