@@ -5,6 +5,9 @@ SQLAlchemy==2.0.31
 alembic==1.13.2
 email-validator==2.2.0
 anthropic==0.111.0
+# Postgres driver — used in production (set DATABASE_URL=postgresql+psycopg://...).
+# Not needed for local SQLite dev/tests.
+psycopg[binary]>=3.1,<4
 
 # dev / test
 pytest==8.2.2
