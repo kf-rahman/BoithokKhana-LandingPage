@@ -67,3 +67,10 @@ class OrderRead(BaseModel):
     delivered: bool = False
     created_at: datetime
     updated_at: datetime
+
+
+class OrderFlagsUpdate(BaseModel):
+    """Admin update of fulfillment flags (both optional)."""
+
+    confirmation_email_sent: bool | None = None
+    delivered: bool | None = None

@@ -1,6 +1,7 @@
 """Order business logic. Route handlers delegate here (CLAUDE.md: logic lives
 in services, not in route handlers)."""
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.order import Order, OrderStatus
@@ -23,6 +24,31 @@ def create_order(db: Session, payload: OrderCreate) -> Order:
         status=OrderStatus.pending_parse.value,
     )
     db.add(order)
+    db.commit()
+    db.refresh(order)
+    return order
+
+
+def list_orders(db: Session) -> list[Order]:
+    """All orders, newest first (for the admin dashboard)."""
+    return list(
+        db.scalars(select(Order).order_by(Order.created_at.desc(), Order.id.desc()))
+    )
+
+
+def set_order_flags(
+    db: Session,
+    order: Order,
+    *,
+    confirmation_email_sent: bool | None = None,
+    delivered: bool | None = None,
+) -> Order:
+    """Update fulfillment flags (admin). Unspecified flags are left unchanged;
+    raw text and parsed data are never touched."""
+    if confirmation_email_sent is not None:
+        order.confirmation_email_sent = confirmation_email_sent
+    if delivered is not None:
+        order.delivered = delivered
     db.commit()
     db.refresh(order)
     return order
