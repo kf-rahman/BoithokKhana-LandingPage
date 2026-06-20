@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { API_BASE_URL } from "@/lib/api";
 
 const SECTION_STYLE: CSSProperties = {
@@ -10,11 +10,18 @@ const SECTION_STYLE: CSSProperties = {
   minHeight: "100vh",
 };
 
+type MenuItem = { id: number; name: string; price_cents: number; active: boolean };
+type Menu = { week_of: string; items: MenuItem[] };
+
 type SubmitState =
   | { kind: "idle" }
   | { kind: "submitting" }
   | { kind: "success"; orderId: number }
   | { kind: "error"; message: string };
+
+function money(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
 
 export default function OrderPage() {
   const [name, setName] = useState("");
@@ -22,6 +29,20 @@ export default function OrderPage() {
   const [phone, setPhone] = useState("");
   const [rawText, setRawText] = useState("");
   const [state, setState] = useState<SubmitState>({ kind: "idle" });
+  const [menu, setMenu] = useState<Menu | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE_URL}/api/menus/current`, { cache: "no-store" })
+      .then((res) => (res.ok ? (res.json() as Promise<Menu>) : null))
+      .then((data) => {
+        if (!cancelled) setMenu(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -67,6 +88,48 @@ export default function OrderPage() {
     }
   }
 
+  const activeMenuItems = menu ? menu.items.filter((i) => i.active) : [];
+
+  function menuCard() {
+    if (activeMenuItems.length === 0) return null;
+    return (
+      <div
+        id="menu"
+        style={{
+          background: "white",
+          borderRadius: "20px",
+          padding: "1.5rem 2rem",
+          marginBottom: "1.5rem",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+          borderTop: "5px solid var(--bright-orange)",
+          scrollMarginTop: "90px",
+        }}
+      >
+        <h3 style={{ color: "var(--deep-red)", marginBottom: "0.75rem" }}>
+          <i className="fas fa-utensils" /> This week&apos;s menu
+        </h3>
+        <ul style={{ listStyle: "none" }}>
+          {activeMenuItems.map((it) => (
+            <li
+              key={it.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "0.4rem 0",
+                borderBottom: "1px solid #f1f1f1",
+              }}
+            >
+              <span>{it.name}</span>
+              <span style={{ color: "var(--fresh-green)", fontWeight: 700 }}>
+                {money(it.price_cents)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
   if (state.kind === "success") {
     return (
       <div className="page-wrap">
@@ -103,6 +166,8 @@ export default function OrderPage() {
       <section style={SECTION_STYLE}>
         <div className="container" style={{ maxWidth: "640px" }}>
           <h2 className="section-title">Place Your Order</h2>
+
+          {menuCard()}
 
           <div className="subscription-box">
             <h2>

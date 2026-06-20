@@ -35,6 +35,11 @@ export default function Header() {
             </Link>
           </li>
           <li>
+            <Link href="/order#menu" onClick={close}>
+              Menu
+            </Link>
+          </li>
+          <li>
             <Link href="/order" onClick={close}>
               Order
             </Link>
