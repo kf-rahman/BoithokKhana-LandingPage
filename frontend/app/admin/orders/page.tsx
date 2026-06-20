@@ -15,6 +15,23 @@ const INPUT_STYLE: CSSProperties = {
   borderRadius: "10px",
   fontSize: "1rem",
 };
+const EDIT_INPUT: CSSProperties = {
+  padding: "0.4rem 0.6rem",
+  border: "1px solid #e5e7eb",
+  borderRadius: "8px",
+  fontSize: "0.9rem",
+};
+const gridTh: CSSProperties = {
+  textAlign: "left",
+  padding: "0.5rem 0.6rem",
+  borderBottom: "2px solid var(--primary-red)",
+  color: "var(--deep-red)",
+  whiteSpace: "nowrap",
+};
+const gridTd: CSSProperties = {
+  padding: "0.45rem 0.6rem",
+  borderBottom: "1px solid #eee",
+};
 
 type OrderItem = {
   id: number;
@@ -22,6 +39,7 @@ type OrderItem = {
   quantity: number;
   notes: string | null;
   menu_item_id: number | null;
+  unit_price_cents: number | null;
 };
 type Order = {
   id: number;
@@ -32,6 +50,7 @@ type Order = {
   status: string;
   menu_id: number | null;
   items: OrderItem[];
+  total_cents: number;
   delivery_date: string | null;
   delivery_notes: string | null;
   confidence: string | null;
@@ -50,6 +69,7 @@ type Menu = {
   items: MenuItem[];
 };
 type Message = { kind: "error" | "success"; text: string };
+type EditRow = { item_name: string; quantity: string; notes: string };
 
 function qtyFor(order: Order, itemName: string): number {
   const target = itemName.trim().toLowerCase();
@@ -57,13 +77,14 @@ function qtyFor(order: Order, itemName: string): number {
     .filter((it) => it.item_name.trim().toLowerCase() === target)
     .reduce((sum, it) => sum + it.quantity, 0);
 }
-
 function statusClass(status: string): string {
   if (status === "parsed") return "badge-veg";
   if (status === "needs_review") return "badge-spicy";
   return "badge-new";
 }
-
+function money(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
 function csvCell(value: string): string {
   return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
@@ -75,6 +96,8 @@ export default function OrdersAdminPage() {
   const [loaded, setLoaded] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [editRows, setEditRows] = useState<EditRow[]>([]);
 
   function adminFetch(path: string, init?: RequestInit): Promise<Response> {
     return fetch(`${API_BASE_URL}${path}`, {
@@ -109,12 +132,37 @@ export default function OrdersAdminPage() {
         return;
       }
       setOrders((await res.json()) as Order[]);
-      // The current published menu defines the weekly grid columns.
       const menuRes = await fetch(`${API_BASE_URL}/api/menus/current`, {
         cache: "no-store",
       });
       setMenu(menuRes.ok ? ((await menuRes.json()) as Menu) : null);
       setLoaded(true);
+    } catch {
+      setMessage({ kind: "error", text: "Couldn't reach the server." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function parseAllPending() {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await adminFetch("/api/admin/orders/parse-pending", {
+        method: "POST",
+      });
+      if (res.ok) {
+        const parsed = (await res.json()) as Order[];
+        setMessage({ kind: "success", text: `Parsed ${parsed.length} pending order(s).` });
+        await loadAll();
+      } else if (res.status === 503) {
+        setMessage({
+          kind: "error",
+          text: "Parser not configured — set ANTHROPIC_API_KEY on the backend.",
+        });
+      } else {
+        setMessage({ kind: "error", text: "Couldn't parse pending orders." });
+      }
     } catch {
       setMessage({ kind: "error", text: "Couldn't reach the server." });
     } finally {
@@ -163,19 +211,78 @@ export default function OrdersAdminPage() {
     }
   }
 
+  function startEdit(order: Order) {
+    setEditing(order.id);
+    setEditRows(
+      order.items.length > 0
+        ? order.items.map((it) => ({
+            item_name: it.item_name,
+            quantity: String(it.quantity),
+            notes: it.notes ?? "",
+          }))
+        : [{ item_name: "", quantity: "1", notes: "" }],
+    );
+  }
+  function updateEditRow(index: number, field: keyof EditRow, value: string) {
+    setEditRows((prev) =>
+      prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)),
+    );
+  }
+  function addEditRow() {
+    setEditRows((prev) => [...prev, { item_name: "", quantity: "1", notes: "" }]);
+  }
+  function removeEditRow(index: number) {
+    setEditRows((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== index)));
+  }
+
+  async function saveEdit(order: Order) {
+    const items = editRows
+      .map((r) => ({
+        item_name: r.item_name.trim(),
+        quantity: parseInt(r.quantity, 10),
+        notes: r.notes.trim() || null,
+      }))
+      .filter((r) => r.item_name !== "" && Number.isFinite(r.quantity) && r.quantity >= 1);
+    if (items.length === 0) {
+      setMessage({ kind: "error", text: "Add at least one item with a name and quantity." });
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await adminFetch(`/api/admin/orders/${order.id}/items`, {
+        method: "PATCH",
+        body: JSON.stringify({ items }),
+      });
+      if (res.ok) {
+        applyUpdated((await res.json()) as Order);
+        setEditing(null);
+        setMessage({ kind: "success", text: `Order #${order.id} corrected.` });
+      } else {
+        setMessage({ kind: "error", text: "Couldn't save the correction." });
+      }
+    } catch {
+      setMessage({ kind: "error", text: "Couldn't reach the server." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const columns = menu ? menu.items.filter((i) => i.active).map((i) => i.name) : [];
+  const revenueCents = orders.reduce((s, o) => s + o.total_cents, 0);
 
   function exportCsv() {
-    const header = ["Customer", "Status", ...columns];
+    const header = ["Customer", "Status", ...columns, "Total"];
     const rows = orders.map((o) => [
       o.customer_name,
       o.status,
       ...columns.map((c) => String(qtyFor(o, c))),
+      (o.total_cents / 100).toFixed(2),
     ]);
     const totals = [
       "TOTAL",
       "",
       ...columns.map((c) => String(orders.reduce((s, o) => s + qtyFor(o, c), 0))),
+      (revenueCents / 100).toFixed(2),
     ];
     const csv = [header, ...rows, totals]
       .map((r) => r.map(csvCell).join(","))
@@ -223,25 +330,30 @@ export default function OrdersAdminPage() {
                 placeholder="Enter admin PIN"
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
-                style={{ ...INPUT_STYLE, flex: 1, minWidth: "180px" }}
+                style={{ ...INPUT_STYLE, flex: 1, minWidth: "160px" }}
               />
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={loadAll}
-                disabled={busy}
-              >
-                {busy ? "Loading…" : "Load orders"}
+              <button type="button" className="btn btn-primary" onClick={loadAll} disabled={busy}>
+                {busy ? "Working…" : "Load orders"}
               </button>
               {loaded && (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={exportCsv}
-                  disabled={orders.length === 0}
-                >
-                  <i className="fas fa-file-csv" /> Export CSV
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={parseAllPending}
+                    disabled={busy}
+                  >
+                    <i className="fas fa-wand-magic-sparkles" /> Parse all pending
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={exportCsv}
+                    disabled={orders.length === 0}
+                  >
+                    <i className="fas fa-file-csv" /> Export CSV
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -250,6 +362,9 @@ export default function OrdersAdminPage() {
             <div className="contact-info-box" style={{ marginBottom: "2rem", overflowX: "auto" }}>
               <h3 style={{ color: "var(--deep-red)", marginBottom: "1rem" }}>
                 <i className="fas fa-table" /> Week of {menu.week_of} — quantities
+                <span style={{ float: "right", color: "var(--deep-green)" }}>
+                  Revenue: {money(revenueCents)}
+                </span>
               </h3>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
                 <thead>
@@ -266,14 +381,11 @@ export default function OrdersAdminPage() {
                   {orders.map((o) => (
                     <tr key={o.id}>
                       <td style={gridTd}>{o.customer_name}</td>
-                      {columns.map((c) => {
-                        const q = qtyFor(o, c);
-                        return (
-                          <td key={c} style={{ ...gridTd, textAlign: "center" }}>
-                            {q || ""}
-                          </td>
-                        );
-                      })}
+                      {columns.map((c) => (
+                        <td key={c} style={{ ...gridTd, textAlign: "center" }}>
+                          {qtyFor(o, c) || ""}
+                        </td>
+                      ))}
                     </tr>
                   ))}
                   <tr>
@@ -289,9 +401,7 @@ export default function OrdersAdminPage() {
             </div>
           )}
 
-          {loaded && orders.length === 0 && (
-            <p style={{ color: "#666" }}>No orders yet.</p>
-          )}
+          {loaded && orders.length === 0 && <p style={{ color: "#666" }}>No orders yet.</p>}
 
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             {orders.map((order) => (
@@ -318,13 +428,7 @@ export default function OrdersAdminPage() {
                   {new Date(order.created_at).toLocaleString()}
                 </p>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "1rem",
-                  }}
-                >
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                   <div>
                     <strong style={{ color: "var(--deep-red)" }}>Customer wrote</strong>
                     <pre
@@ -340,86 +444,158 @@ export default function OrdersAdminPage() {
                       {order.raw_text}
                     </pre>
                   </div>
+
                   <div>
-                    <strong style={{ color: "var(--deep-red)" }}>Structured</strong>
-                    <div style={{ marginTop: "0.4rem" }}>
-                      {order.items.length === 0 ? (
-                        <p style={{ color: "#999" }}>
-                          {order.status === "pending_parse"
-                            ? "Not parsed yet."
-                            : "No items — review the raw text."}
-                        </p>
-                      ) : (
-                        <ul style={{ listStyle: "none", lineHeight: 1.8 }}>
-                          {order.items.map((it) => (
-                            <li key={it.id}>
-                              <strong>{it.quantity}×</strong> {it.item_name}
-                              {it.menu_item_id === null && (
-                                <span style={{ color: "var(--primary-red)" }}> ⚠ not on menu</span>
-                              )}
-                              {it.notes ? (
-                                <span style={{ color: "#666" }}> — {it.notes}</span>
-                              ) : null}
-                            </li>
-                          ))}
-                        </ul>
+                    <strong style={{ color: "var(--deep-red)" }}>
+                      Structured{" "}
+                      {order.total_cents > 0 && (
+                        <span style={{ color: "var(--deep-green)", fontWeight: 700 }}>
+                          · {money(order.total_cents)}
+                        </span>
                       )}
-                      {order.delivery_date && (
-                        <p style={{ fontSize: "0.85rem", color: "#666" }}>
-                          Deliver: {order.delivery_date}
-                        </p>
-                      )}
-                      {order.confidence && (
-                        <p style={{ fontSize: "0.85rem", color: "#666" }}>
-                          Confidence: {order.confidence}
-                        </p>
-                      )}
-                      {order.unmatched_text && (
-                        <p style={{ fontSize: "0.85rem", color: "var(--primary-red)" }}>
-                          Unmatched: {order.unmatched_text}
-                        </p>
-                      )}
-                    </div>
+                    </strong>
+
+                    {editing === order.id ? (
+                      <div style={{ marginTop: "0.5rem" }}>
+                        {editRows.map((row, i) => (
+                          <div
+                            key={i}
+                            style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem" }}
+                          >
+                            <input
+                              type="text"
+                              placeholder="Dish"
+                              value={row.item_name}
+                              onChange={(e) => updateEditRow(i, "item_name", e.target.value)}
+                              style={{ ...EDIT_INPUT, flex: 2 }}
+                            />
+                            <input
+                              type="number"
+                              min="1"
+                              value={row.quantity}
+                              onChange={(e) => updateEditRow(i, "quantity", e.target.value)}
+                              style={{ ...EDIT_INPUT, width: "56px" }}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Notes"
+                              value={row.notes}
+                              onChange={(e) => updateEditRow(i, "notes", e.target.value)}
+                              style={{ ...EDIT_INPUT, flex: 2 }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeEditRow(i)}
+                              aria-label="Remove"
+                              style={{
+                                border: "none",
+                                background: "var(--light-gray)",
+                                borderRadius: "8px",
+                                padding: "0 0.6rem",
+                                cursor: "pointer",
+                                color: "var(--primary-red)",
+                              }}
+                            >
+                              <i className="fas fa-times" />
+                            </button>
+                          </div>
+                        ))}
+                        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                          <button type="button" className="menu-tab" onClick={addEditRow}>
+                            <i className="fas fa-plus" /> Add
+                          </button>
+                          <button
+                            type="button"
+                            className="menu-tab"
+                            style={{ background: "var(--fresh-green)", color: "white", borderColor: "var(--fresh-green)" }}
+                            onClick={() => saveEdit(order)}
+                            disabled={busy}
+                          >
+                            Save
+                          </button>
+                          <button type="button" className="menu-tab" onClick={() => setEditing(null)}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ marginTop: "0.4rem" }}>
+                        {order.items.length === 0 ? (
+                          <p style={{ color: "#999" }}>
+                            {order.status === "pending_parse"
+                              ? "Not parsed yet."
+                              : "No items — review the raw text."}
+                          </p>
+                        ) : (
+                          <ul style={{ listStyle: "none", lineHeight: 1.8 }}>
+                            {order.items.map((it) => (
+                              <li key={it.id}>
+                                <strong>{it.quantity}×</strong> {it.item_name}
+                                {it.menu_item_id === null && (
+                                  <span style={{ color: "var(--primary-red)" }}> ⚠ not on menu</span>
+                                )}
+                                {it.unit_price_cents !== null && (
+                                  <span style={{ color: "#666" }}> ({money(it.unit_price_cents)})</span>
+                                )}
+                                {it.notes ? <span style={{ color: "#666" }}> — {it.notes}</span> : null}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {order.delivery_date && (
+                          <p style={{ fontSize: "0.85rem", color: "#666" }}>Deliver: {order.delivery_date}</p>
+                        )}
+                        {order.confidence && (
+                          <p style={{ fontSize: "0.85rem", color: "#666" }}>Confidence: {order.confidence}</p>
+                        )}
+                        {order.unmatched_text && (
+                          <p style={{ fontSize: "0.85rem", color: "var(--primary-red)" }}>
+                            Unmatched: {order.unmatched_text}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "0.5rem",
-                    flexWrap: "wrap",
-                    marginTop: "1rem",
-                  }}
-                >
-                  {order.status === "pending_parse" && (
+                {editing !== order.id && (
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem" }}>
+                    {order.status === "pending_parse" && (
+                      <button type="button" className="menu-tab" onClick={() => parseOrder(order)} disabled={busy}>
+                        <i className="fas fa-wand-magic-sparkles" /> Parse
+                      </button>
+                    )}
+                    <button type="button" className="menu-tab" onClick={() => startEdit(order)} disabled={busy}>
+                      <i className="fas fa-pen" /> Edit items
+                    </button>
                     <button
                       type="button"
                       className="menu-tab"
-                      onClick={() => parseOrder(order)}
+                      style={
+                        order.confirmation_email_sent
+                          ? { background: "var(--fresh-green)", color: "white", borderColor: "var(--fresh-green)" }
+                          : {}
+                      }
+                      onClick={() => toggleFlag(order, "confirmation_email_sent")}
                       disabled={busy}
                     >
-                      <i className="fas fa-wand-magic-sparkles" /> Parse
+                      {order.confirmation_email_sent ? "✓ Email sent" : "Mark email sent"}
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    className="menu-tab"
-                    style={flagStyle(order.confirmation_email_sent)}
-                    onClick={() => toggleFlag(order, "confirmation_email_sent")}
-                    disabled={busy}
-                  >
-                    {order.confirmation_email_sent ? "✓ Email sent" : "Mark email sent"}
-                  </button>
-                  <button
-                    type="button"
-                    className="menu-tab"
-                    style={flagStyle(order.delivered)}
-                    onClick={() => toggleFlag(order, "delivered")}
-                    disabled={busy}
-                  >
-                    {order.delivered ? "✓ Delivered" : "Mark delivered"}
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      className="menu-tab"
+                      style={
+                        order.delivered
+                          ? { background: "var(--fresh-green)", color: "white", borderColor: "var(--fresh-green)" }
+                          : {}
+                      }
+                      onClick={() => toggleFlag(order, "delivered")}
+                      disabled={busy}
+                    >
+                      {order.delivered ? "✓ Delivered" : "Mark delivered"}
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -427,22 +603,4 @@ export default function OrdersAdminPage() {
       </section>
     </div>
   );
-}
-
-const gridTh: CSSProperties = {
-  textAlign: "left",
-  padding: "0.5rem 0.6rem",
-  borderBottom: "2px solid var(--primary-red)",
-  color: "var(--deep-red)",
-  whiteSpace: "nowrap",
-};
-const gridTd: CSSProperties = {
-  padding: "0.45rem 0.6rem",
-  borderBottom: "1px solid #eee",
-};
-
-function flagStyle(active: boolean): CSSProperties {
-  return active
-    ? { background: "var(--fresh-green)", color: "white", borderColor: "var(--fresh-green)" }
-    : {};
 }
