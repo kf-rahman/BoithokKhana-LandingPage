@@ -23,5 +23,14 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-opus-4-8"
 
+    # Email (customer order confirmations). Disabled until SMTP_HOST is set;
+    # set the SMTP_* vars to a real provider (SES, SendGrid, etc.) for production.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "orders@boithokkhana.ca"
+    smtp_use_tls: bool = True
+
 
 settings = Settings()

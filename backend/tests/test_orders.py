@@ -68,3 +68,21 @@ def test_invalid_email_is_rejected(client: TestClient) -> None:
 def test_missing_required_fields_rejected(client: TestClient) -> None:
     res = client.post("/api/orders", json={"customer_name": "Sam"})
     assert res.status_code == 422
+
+
+def test_confirmation_email_sent_when_smtp_configured(client: TestClient, monkeypatch) -> None:
+    from app.config import settings
+    from app.services import email
+
+    sent: dict[str, str] = {}
+
+    def fake_send(to: str, subject: str, body: str) -> None:
+        sent["to"] = to
+
+    monkeypatch.setattr(settings, "smtp_host", "smtp.test")
+    monkeypatch.setattr(email, "_send_email", fake_send)
+
+    res = client.post("/api/orders", json=VALID_PAYLOAD)
+    assert res.status_code == 201
+    assert res.json()["confirmation_email_sent"] is True
+    assert sent["to"] == VALID_PAYLOAD["customer_email"]

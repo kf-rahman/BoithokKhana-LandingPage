@@ -1,10 +1,12 @@
-"""Order and OrderItem models.
+"""Order, OrderItem, and OrderCorrection models.
 
 Every order keeps the customer's original free text (``raw_text``) permanently.
 The structured version of an order is a set of ``OrderItem`` rows (one per dish),
 each linked to the menu item it matched — an item that matches nothing on the
 active menu is left unlinked and the order is flagged for review (never
-invented). See CLAUDE.md and .claude/skills/order-parsing/SKILL.md.
+invented). Admin corrections to the structured data are audited in
+``OrderCorrection`` and never touch the raw text. See CLAUDE.md and
+.claude/skills/order-parsing/SKILL.md.
 """
 
 import enum
@@ -12,6 +14,7 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     Date,
     DateTime,
@@ -42,8 +45,6 @@ class Order(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     customer_name: Mapped[str] = mapped_column(String(120), nullable=False)
-    # Required at the API boundary (OrderCreate). Nullable at the DB level so the
-    # column could be added to existing rows without disturbing them.
     customer_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     customer_phone: Mapped[str] = mapped_column(String(40), nullable=False)
 
@@ -58,13 +59,10 @@ class Order(Base):
         nullable=False,
     )
 
-    # Which week's menu was active when this order was placed — stamped so a
-    # historical order stays interpretable against the right menu.
     menu_id: Mapped[int | None] = mapped_column(
         ForeignKey("menus.id"), nullable=True, index=True
     )
 
-    # Parsed delivery info + parse metadata — populated later by the parser.
     delivery_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     delivery_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     confidence: Mapped[str | None] = mapped_column(String(10), nullable=True)
@@ -73,7 +71,6 @@ class Order(Base):
         DateTime(timezone=True), nullable=True
     )
 
-    # Admin-managed fulfillment flags (toggled from the admin view later).
     confirmation_email_sent: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=false(), nullable=False
     )
@@ -96,6 +93,11 @@ class Order(Base):
     )
     menu: Mapped["Menu | None"] = relationship("Menu")
 
+    @property
+    def total_cents(self) -> int:
+        """Order total from priced (menu-matched) line items."""
+        return sum((item.unit_price_cents or 0) * item.quantity for item in self.items)
+
 
 class OrderItem(Base):
     """One line of a structured order (one dish + quantity)."""
@@ -106,14 +108,15 @@ class OrderItem(Base):
     order_id: Mapped[int] = mapped_column(
         ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    # The menu item this matched. NULL means it matched nothing on the active
-    # menu → the order is flagged for review rather than inventing an item.
     menu_item_id: Mapped[int | None] = mapped_column(
         ForeignKey("menu_items.id"), nullable=True, index=True
     )
     item_name: Mapped[str] = mapped_column(String(120), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Unit price snapshotted from the matched menu item at match time, so totals
+    # stay correct even if the menu price later changes. Null when unmatched.
+    unit_price_cents: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -121,3 +124,21 @@ class OrderItem(Base):
 
     order: Mapped["Order"] = relationship(back_populates="items")
     menu_item: Mapped["MenuItem | None"] = relationship("MenuItem")
+
+
+class OrderCorrection(Base):
+    """Audit log of an admin correction to an order's structured items. Only the
+    structured data changes — the customer's raw text is never part of this."""
+
+    __tablename__ = "order_corrections"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_id: Mapped[int] = mapped_column(
+        ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    corrected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    before_items: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)
+    after_items: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)

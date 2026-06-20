@@ -4,8 +4,10 @@ in services, not in route handlers)."""
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.order import Order, OrderStatus
-from app.schemas.order import OrderCreate
+from app.models.order import Order, OrderCorrection, OrderItem, OrderStatus
+from app.schemas.order import OrderCreate, OrderItemInput
+from app.services.menus import current_published_menu
+from app.services.order_parsing import _match_menu_item
 
 
 def create_order(db: Session, payload: OrderCreate) -> Order:
@@ -49,6 +51,57 @@ def set_order_flags(
         order.confirmation_email_sent = confirmation_email_sent
     if delivered is not None:
         order.delivered = delivered
+    db.commit()
+    db.refresh(order)
+    return order
+
+
+def _item_snapshot(item: OrderItem) -> dict:
+    return {
+        "item_name": item.item_name,
+        "quantity": item.quantity,
+        "notes": item.notes,
+        "menu_item_id": item.menu_item_id,
+        "unit_price_cents": item.unit_price_cents,
+    }
+
+
+def correct_order(
+    db: Session,
+    order: Order,
+    items: list[OrderItemInput],
+    note: str | None = None,
+) -> Order:
+    """Replace an order's structured items with an admin-corrected set.
+
+    Each item is re-matched against the menu (snapshotting its price), the change
+    is logged to ``order_corrections``, and the order is marked reviewed. The
+    customer's raw text is NEVER touched (CLAUDE.md non-negotiable).
+    """
+    menu = order.menu or current_published_menu(db)
+    before = [_item_snapshot(it) for it in order.items]
+
+    order.items.clear()
+    for inp in items:
+        matched = _match_menu_item(inp.item_name, menu)
+        order.items.append(
+            OrderItem(
+                item_name=inp.item_name.strip(),
+                quantity=inp.quantity,
+                notes=inp.notes,
+                menu_item_id=matched.id if matched is not None else None,
+                unit_price_cents=matched.price_cents if matched is not None else None,
+            )
+        )
+    order.status = OrderStatus.parsed.value  # Dad has reviewed and confirmed it
+    db.flush()
+
+    after = [_item_snapshot(it) for it in order.items]
+    db.add(
+        OrderCorrection(
+            order_id=order.id, before_items=before, after_items=after, note=note
+        )
+    )
     db.commit()
     db.refresh(order)
     return order

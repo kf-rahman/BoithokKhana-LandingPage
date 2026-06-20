@@ -17,10 +17,11 @@ import enum
 from datetime import date, datetime, timezone
 
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models.menu import Menu
+from app.models.menu import Menu, MenuItem
 from app.models.order import Order, OrderItem, OrderStatus
 from app.services.menus import current_published_menu
 
@@ -107,13 +108,13 @@ def _request_structured_parse(raw_text: str, menu: Menu | None) -> ParsedOrder:
         raise OrderParseError(str(exc)) from exc
 
 
-def _match_menu_item(name: str, menu: Menu | None) -> int | None:
+def _match_menu_item(name: str, menu: Menu | None) -> MenuItem | None:
     if menu is None:
         return None
     target = name.strip().casefold()
     for item in menu.items:
         if item.active and item.name.strip().casefold() == target:
-            return item.id
+            return item
     return None
 
 
@@ -128,8 +129,9 @@ def parse_order(db: Session, order: Order) -> Order:
     """Parse a pending order's raw text into structured items.
 
     Stamps the active menu, structures the text via Claude, matches each item
-    against the menu, and sets status parsed/needs_review. The raw text is never
-    modified. Raises OrderParserNotConfigured if no API key is set.
+    against the menu (snapshotting its price), and sets status parsed/needs_review.
+    The raw text is never modified. Raises OrderParserNotConfigured if no API key
+    is set.
     """
     menu = current_published_menu(db)
     order.menu_id = menu.id if menu is not None else None
@@ -148,15 +150,16 @@ def parse_order(db: Session, order: Order) -> Order:
 
     any_unmatched = False
     for item in parsed.items:
-        menu_item_id = _match_menu_item(item.name, menu)
-        if menu_item_id is None:
+        matched = _match_menu_item(item.name, menu)
+        if matched is None:
             any_unmatched = True
         order.items.append(
             OrderItem(
                 item_name=item.name,
                 quantity=item.quantity,
                 notes=_combine_notes(item.modifiers, item.notes),
-                menu_item_id=menu_item_id,
+                menu_item_id=matched.id if matched is not None else None,
+                unit_price_cents=matched.price_cents if matched is not None else None,
             )
         )
 
@@ -179,3 +182,16 @@ def parse_order(db: Session, order: Order) -> Order:
     db.commit()
     db.refresh(order)
     return order
+
+
+def parse_pending_orders(db: Session) -> list[Order]:
+    """Parse every order still awaiting a parse (the admin 'parse all' action).
+
+    Raises OrderParserNotConfigured if no key is set, so the caller can 503.
+    """
+    if not settings.anthropic_api_key:
+        raise OrderParserNotConfigured("ANTHROPIC_API_KEY is not set.")
+    pending = list(
+        db.scalars(select(Order).where(Order.status == OrderStatus.pending_parse.value))
+    )
+    return [parse_order(db, order) for order in pending]

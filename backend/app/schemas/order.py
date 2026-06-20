@@ -44,6 +44,7 @@ class OrderItemRead(BaseModel):
     quantity: int
     notes: str | None = None
     menu_item_id: int | None = None  # null = did not match the active menu
+    unit_price_cents: int | None = None
 
 
 class OrderRead(BaseModel):
@@ -59,6 +60,7 @@ class OrderRead(BaseModel):
     status: str
     menu_id: int | None = None
     items: list[OrderItemRead] = []
+    total_cents: int = 0
     delivery_date: date | None = None
     delivery_notes: str | None = None
     confidence: str | None = None
@@ -74,3 +76,18 @@ class OrderFlagsUpdate(BaseModel):
 
     confirmation_email_sent: bool | None = None
     delivered: bool | None = None
+
+
+class OrderItemInput(BaseModel):
+    """One corrected line item submitted by the admin."""
+
+    item_name: str = Field(min_length=1, max_length=120)
+    quantity: int = Field(ge=1)
+    notes: str | None = None
+
+
+class OrderCorrectionRequest(BaseModel):
+    """Admin correction: the full replacement set of structured items."""
+
+    items: list[OrderItemInput]
+    note: str | None = None

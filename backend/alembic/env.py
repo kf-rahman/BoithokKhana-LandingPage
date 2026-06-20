@@ -44,7 +44,9 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            render_as_batch=True,  # safe ALTERs on SQLite
+            # Batch mode is required for SQLite ALTERs; on Postgres it forces
+            # unnecessary table rebuilds, so enable it only for SQLite.
+            render_as_batch=connection.dialect.name == "sqlite",
         )
         with context.begin_transaction():
             context.run_migrations()

@@ -95,6 +95,8 @@ def test_high_confidence_parse_creates_matched_items(
     assert item["quantity"] == 2
     assert item["menu_item_id"] is not None  # matched a real menu item
     assert item["notes"] == "no spice"
+    assert item["unit_price_cents"] == 1500  # price snapshotted from the menu
+    assert body["total_cents"] == 3000  # 2 × $15.00
 
 
 def test_item_not_on_menu_flags_review_and_is_not_invented(
