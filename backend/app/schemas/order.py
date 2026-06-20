@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class OrderCreate(BaseModel):
-    """Payload a customer submits from the order form."""
+    """Payload a customer submits from the order form (email required)."""
 
     customer_name: str = Field(min_length=1, max_length=120)
     customer_email: EmailStr
@@ -32,6 +32,47 @@ class OrderCreate(BaseModel):
         if not value.strip():
             raise ValueError("raw_text must not be empty or whitespace-only")
         return value
+
+
+class OrderItemInput(BaseModel):
+    """One item submitted by the admin (correction or manual create)."""
+
+    item_name: str = Field(min_length=1, max_length=120)
+    quantity: int = Field(ge=1)
+    notes: str | None = None
+
+
+class AdminOrderCreate(BaseModel):
+    """An order Dad enters manually (e.g. a phone order). Email optional."""
+
+    customer_name: str = Field(min_length=1, max_length=120)
+    customer_email: EmailStr | None = None
+    customer_phone: str = Field(min_length=1, max_length=40)
+    raw_text: str = Field(min_length=1)
+    delivery_date: date | None = None
+    delivery_notes: str | None = None
+    items: list[OrderItemInput] = []
+
+
+class OrderUpdate(BaseModel):
+    """Partial edit of an order's details/flags (only sent fields change).
+    Items are edited separately via the correction endpoint; raw text is never
+    editable."""
+
+    customer_name: str | None = None
+    customer_email: EmailStr | None = None
+    customer_phone: str | None = None
+    delivery_date: date | None = None
+    delivery_notes: str | None = None
+    confirmation_email_sent: bool | None = None
+    delivered: bool | None = None
+
+
+class OrderCorrectionRequest(BaseModel):
+    """Admin correction: the full replacement set of structured items."""
+
+    items: list[OrderItemInput]
+    note: str | None = None
 
 
 class OrderItemRead(BaseModel):
@@ -69,25 +110,3 @@ class OrderRead(BaseModel):
     delivered: bool = False
     created_at: datetime
     updated_at: datetime
-
-
-class OrderFlagsUpdate(BaseModel):
-    """Admin update of fulfillment flags (both optional)."""
-
-    confirmation_email_sent: bool | None = None
-    delivered: bool | None = None
-
-
-class OrderItemInput(BaseModel):
-    """One corrected line item submitted by the admin."""
-
-    item_name: str = Field(min_length=1, max_length=120)
-    quantity: int = Field(ge=1)
-    notes: str | None = None
-
-
-class OrderCorrectionRequest(BaseModel):
-    """Admin correction: the full replacement set of structured items."""
-
-    items: list[OrderItemInput]
-    note: str | None = None

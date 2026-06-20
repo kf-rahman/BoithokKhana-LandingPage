@@ -173,3 +173,72 @@ def test_parse_pending_no_key_503(
     assert (
         client.post("/api/admin/orders/parse-pending", headers=PIN).status_code == 503
     )
+
+
+def test_admin_create_order(client: TestClient, db_session: Session) -> None:
+    res = client.post(
+        "/api/admin/orders",
+        headers=PIN,
+        json={
+            "customer_name": "Phone Order",
+            "customer_phone": "555-1234",
+            "raw_text": "3 veg thali, deliver friday",
+        },
+    )
+    assert res.status_code == 201
+    body = res.json()
+    assert body["customer_name"] == "Phone Order"
+    assert body["customer_email"] is None  # optional for admin-created orders
+    assert body["status"] == "pending_parse"
+
+
+def test_admin_create_requires_pin(client: TestClient) -> None:
+    res = client.post(
+        "/api/admin/orders",
+        json={"customer_name": "X", "customer_phone": "1", "raw_text": "y"},
+    )
+    assert res.status_code == 401
+
+
+def test_update_order_details(client: TestClient, db_session: Session) -> None:
+    order = _order(db_session)
+    res = client.patch(
+        f"/api/admin/orders/{order.id}",
+        headers=PIN,
+        json={"customer_name": "Renamed", "delivery_notes": "leave at door"},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["customer_name"] == "Renamed"
+    assert body["delivery_notes"] == "leave at door"
+    assert body["customer_phone"] == "555"  # unchanged (only sent fields update)
+
+
+def test_delete_order(client: TestClient, db_session: Session) -> None:
+    order = _order(db_session)
+    assert client.delete(f"/api/admin/orders/{order.id}", headers=PIN).status_code == 204
+    assert db_session.get(Order, order.id) is None
+
+
+def test_delete_order_requires_pin(client: TestClient, db_session: Session) -> None:
+    order = _order(db_session)
+    assert client.delete(f"/api/admin/orders/{order.id}").status_code == 401
+
+
+def test_delete_missing_order_404(client: TestClient) -> None:
+    assert client.delete("/api/admin/orders/999", headers=PIN).status_code == 404
+
+
+def test_delete_order_cascades_corrections(
+    client: TestClient, db_session: Session
+) -> None:
+    _publish_menu(db_session)
+    order = _order(db_session)
+    client.patch(
+        f"/api/admin/orders/{order.id}/items",
+        headers=PIN,
+        json={"items": [{"item_name": "Chicken Biryani", "quantity": 1}]},
+    )
+    assert db_session.query(OrderCorrection).filter_by(order_id=order.id).count() == 1
+    assert client.delete(f"/api/admin/orders/{order.id}", headers=PIN).status_code == 204
+    assert db_session.query(OrderCorrection).filter_by(order_id=order.id).count() == 0

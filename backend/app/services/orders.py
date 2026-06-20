@@ -5,25 +5,59 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.order import Order, OrderCorrection, OrderItem, OrderStatus
-from app.schemas.order import OrderCreate, OrderItemInput
+from app.schemas.order import (
+    AdminOrderCreate,
+    OrderCreate,
+    OrderItemInput,
+    OrderUpdate,
+)
 from app.services.menus import current_published_menu
 from app.services.order_parsing import _match_menu_item
 
 
 def create_order(db: Session, payload: OrderCreate) -> Order:
-    """Persist a new order, saving the customer's raw text first.
-
-    No parsing happens here. The order is stored with status
-    ``pending_parse`` so a later parsing failure or API outage can never lose
-    the customer's original order — the raw text is committed up front (see
-    .claude/skills/order-parsing/SKILL.md).
-    """
+    """Persist a new customer order, saving the raw text first (status
+    ``pending_parse``) so a later parse failure can never lose it."""
     order = Order(
         customer_name=payload.customer_name,
         customer_email=payload.customer_email,
         customer_phone=payload.customer_phone,
         raw_text=payload.raw_text,  # verbatim — never trimmed or normalized
         status=OrderStatus.pending_parse.value,
+    )
+    db.add(order)
+    db.commit()
+    db.refresh(order)
+    return order
+
+
+def create_admin_order(db: Session, payload: AdminOrderCreate) -> Order:
+    """Create an order Dad entered manually (e.g. a phone order). If he provided
+    items they're matched/priced and the order is `parsed`; otherwise it's left
+    `pending_parse` to parse or edit later."""
+    menu = current_published_menu(db)
+    order = Order(
+        customer_name=payload.customer_name.strip(),
+        customer_email=payload.customer_email,
+        customer_phone=payload.customer_phone.strip(),
+        raw_text=payload.raw_text,
+        delivery_date=payload.delivery_date,
+        delivery_notes=payload.delivery_notes,
+        menu_id=menu.id if menu is not None else None,
+    )
+    for inp in payload.items:
+        matched = _match_menu_item(inp.item_name, menu)
+        order.items.append(
+            OrderItem(
+                item_name=inp.item_name.strip(),
+                quantity=inp.quantity,
+                notes=inp.notes,
+                menu_item_id=matched.id if matched is not None else None,
+                unit_price_cents=matched.price_cents if matched is not None else None,
+            )
+        )
+    order.status = (
+        OrderStatus.parsed.value if payload.items else OrderStatus.pending_parse.value
     )
     db.add(order)
     db.commit()
@@ -38,22 +72,20 @@ def list_orders(db: Session) -> list[Order]:
     )
 
 
-def set_order_flags(
-    db: Session,
-    order: Order,
-    *,
-    confirmation_email_sent: bool | None = None,
-    delivered: bool | None = None,
-) -> Order:
-    """Update fulfillment flags (admin). Unspecified flags are left unchanged;
-    raw text and parsed data are never touched."""
-    if confirmation_email_sent is not None:
-        order.confirmation_email_sent = confirmation_email_sent
-    if delivered is not None:
-        order.delivered = delivered
+def update_order(db: Session, order: Order, payload: OrderUpdate) -> Order:
+    """Update an order's details/flags. Only fields actually sent are changed;
+    raw text and the parsed items are never touched here."""
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(order, field, value)
     db.commit()
     db.refresh(order)
     return order
+
+
+def delete_order(db: Session, order: Order) -> None:
+    """Delete an order and its items + correction history (cancel/junk)."""
+    db.delete(order)
+    db.commit()
 
 
 def _item_snapshot(item: OrderItem) -> dict:

@@ -91,6 +91,9 @@ class Order(Base):
     items: Mapped[list["OrderItem"]] = relationship(
         back_populates="order", cascade="all, delete-orphan"
     )
+    corrections: Mapped[list["OrderCorrection"]] = relationship(
+        cascade="all, delete-orphan"
+    )
     menu: Mapped["Menu | None"] = relationship("Menu")
 
     @property

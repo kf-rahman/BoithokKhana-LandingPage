@@ -28,10 +28,7 @@ const gridTh: CSSProperties = {
   color: "var(--deep-red)",
   whiteSpace: "nowrap",
 };
-const gridTd: CSSProperties = {
-  padding: "0.45rem 0.6rem",
-  borderBottom: "1px solid #eee",
-};
+const gridTd: CSSProperties = { padding: "0.45rem 0.6rem", borderBottom: "1px solid #eee" };
 
 type OrderItem = {
   id: number;
@@ -70,6 +67,23 @@ type Menu = {
 };
 type Message = { kind: "error" | "success"; text: string };
 type EditRow = { item_name: string; quantity: string; notes: string };
+type DetailsForm = {
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  delivery_date: string;
+  delivery_notes: string;
+};
+type CreateForm = DetailsForm & { raw_text: string };
+
+const EMPTY_CREATE: CreateForm = {
+  customer_name: "",
+  customer_email: "",
+  customer_phone: "",
+  delivery_date: "",
+  delivery_notes: "",
+  raw_text: "",
+};
 
 function qtyFor(order: Order, itemName: string): number {
   const target = itemName.trim().toLowerCase();
@@ -88,6 +102,15 @@ function money(cents: number): string {
 function csvCell(value: string): string {
   return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
+function detailsPayload(d: DetailsForm) {
+  return {
+    customer_name: d.customer_name.trim(),
+    customer_phone: d.customer_phone.trim(),
+    customer_email: d.customer_email.trim() || null,
+    delivery_date: d.delivery_date || null,
+    delivery_notes: d.delivery_notes.trim() || null,
+  };
+}
 
 export default function OrdersAdminPage() {
   const [pin, setPin] = useState("");
@@ -96,8 +119,17 @@ export default function OrdersAdminPage() {
   const [loaded, setLoaded] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateForm>(EMPTY_CREATE);
   const [editing, setEditing] = useState<number | null>(null);
   const [editRows, setEditRows] = useState<EditRow[]>([]);
+  const [editDetails, setEditDetails] = useState<DetailsForm>({
+    customer_name: "",
+    customer_email: "",
+    customer_phone: "",
+    delivery_date: "",
+    delivery_notes: "",
+  });
 
   function adminFetch(path: string, init?: RequestInit): Promise<Response> {
     return fetch(`${API_BASE_URL}${path}`, {
@@ -132,11 +164,66 @@ export default function OrdersAdminPage() {
         return;
       }
       setOrders((await res.json()) as Order[]);
-      const menuRes = await fetch(`${API_BASE_URL}/api/menus/current`, {
-        cache: "no-store",
-      });
+      const menuRes = await fetch(`${API_BASE_URL}/api/menus/current`, { cache: "no-store" });
       setMenu(menuRes.ok ? ((await menuRes.json()) as Menu) : null);
       setLoaded(true);
+    } catch {
+      setMessage({ kind: "error", text: "Couldn't reach the server." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createOrder() {
+    if (
+      !createForm.customer_name.trim() ||
+      !createForm.customer_phone.trim() ||
+      !createForm.raw_text.trim()
+    ) {
+      setMessage({ kind: "error", text: "Name, phone, and the order text are required." });
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await adminFetch("/api/admin/orders", {
+        method: "POST",
+        body: JSON.stringify({ ...detailsPayload(createForm), raw_text: createForm.raw_text }),
+      });
+      if (res.status === 201) {
+        const created = (await res.json()) as Order;
+        setOrders((prev) => [created, ...prev]);
+        setLoaded(true);
+        setShowCreate(false);
+        setCreateForm(EMPTY_CREATE);
+        setMessage({ kind: "success", text: `Added order #${created.id}.` });
+      } else if (res.status === 401) {
+        setMessage({ kind: "error", text: "Wrong admin PIN." });
+      } else {
+        setMessage({ kind: "error", text: "Couldn't create the order." });
+      }
+    } catch {
+      setMessage({ kind: "error", text: "Couldn't reach the server." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteOrder(order: Order) {
+    if (!window.confirm(`Delete order #${order.id} from ${order.customer_name}? This can't be undone.`)) {
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await adminFetch(`/api/admin/orders/${order.id}`, { method: "DELETE" });
+      if (res.status === 204) {
+        setOrders((prev) => prev.filter((o) => o.id !== order.id));
+        setMessage({ kind: "success", text: `Deleted order #${order.id}.` });
+      } else if (res.status === 401) {
+        setMessage({ kind: "error", text: "Wrong admin PIN." });
+      } else {
+        setMessage({ kind: "error", text: "Couldn't delete that order." });
+      }
     } catch {
       setMessage({ kind: "error", text: "Couldn't reach the server." });
     } finally {
@@ -148,18 +235,13 @@ export default function OrdersAdminPage() {
     setBusy(true);
     setMessage(null);
     try {
-      const res = await adminFetch("/api/admin/orders/parse-pending", {
-        method: "POST",
-      });
+      const res = await adminFetch("/api/admin/orders/parse-pending", { method: "POST" });
       if (res.ok) {
         const parsed = (await res.json()) as Order[];
         setMessage({ kind: "success", text: `Parsed ${parsed.length} pending order(s).` });
         await loadAll();
       } else if (res.status === 503) {
-        setMessage({
-          kind: "error",
-          text: "Parser not configured — set ANTHROPIC_API_KEY on the backend.",
-        });
+        setMessage({ kind: "error", text: "Parser not configured — set ANTHROPIC_API_KEY on the backend." });
       } else {
         setMessage({ kind: "error", text: "Couldn't parse pending orders." });
       }
@@ -190,17 +272,12 @@ export default function OrdersAdminPage() {
     setBusy(true);
     setMessage(null);
     try {
-      const res = await adminFetch(`/api/admin/orders/${order.id}/parse`, {
-        method: "POST",
-      });
+      const res = await adminFetch(`/api/admin/orders/${order.id}/parse`, { method: "POST" });
       if (res.ok) {
         applyUpdated((await res.json()) as Order);
         setMessage({ kind: "success", text: `Parsed order #${order.id}.` });
       } else if (res.status === 503) {
-        setMessage({
-          kind: "error",
-          text: "Parser not configured — set ANTHROPIC_API_KEY on the backend.",
-        });
+        setMessage({ kind: "error", text: "Parser not configured — set ANTHROPIC_API_KEY on the backend." });
       } else {
         setMessage({ kind: "error", text: "Couldn't parse that order." });
       }
@@ -222,11 +299,16 @@ export default function OrdersAdminPage() {
           }))
         : [{ item_name: "", quantity: "1", notes: "" }],
     );
+    setEditDetails({
+      customer_name: order.customer_name,
+      customer_email: order.customer_email ?? "",
+      customer_phone: order.customer_phone,
+      delivery_date: order.delivery_date ?? "",
+      delivery_notes: order.delivery_notes ?? "",
+    });
   }
   function updateEditRow(index: number, field: keyof EditRow, value: string) {
-    setEditRows((prev) =>
-      prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)),
-    );
+    setEditRows((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
   }
   function addEditRow() {
     setEditRows((prev) => [...prev, { item_name: "", quantity: "1", notes: "" }]);
@@ -243,22 +325,30 @@ export default function OrdersAdminPage() {
         notes: r.notes.trim() || null,
       }))
       .filter((r) => r.item_name !== "" && Number.isFinite(r.quantity) && r.quantity >= 1);
-    if (items.length === 0) {
-      setMessage({ kind: "error", text: "Add at least one item with a name and quantity." });
+    if (!editDetails.customer_name.trim() || !editDetails.customer_phone.trim()) {
+      setMessage({ kind: "error", text: "Name and phone are required." });
       return;
     }
     setBusy(true);
     try {
-      const res = await adminFetch(`/api/admin/orders/${order.id}/items`, {
+      const detailsRes = await adminFetch(`/api/admin/orders/${order.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(detailsPayload(editDetails)),
+      });
+      if (!detailsRes.ok) {
+        setMessage({ kind: "error", text: "Couldn't save the order details." });
+        return;
+      }
+      const itemsRes = await adminFetch(`/api/admin/orders/${order.id}/items`, {
         method: "PATCH",
         body: JSON.stringify({ items }),
       });
-      if (res.ok) {
-        applyUpdated((await res.json()) as Order);
+      if (itemsRes.ok) {
+        applyUpdated((await itemsRes.json()) as Order);
         setEditing(null);
-        setMessage({ kind: "success", text: `Order #${order.id} corrected.` });
+        setMessage({ kind: "success", text: `Order #${order.id} updated.` });
       } else {
-        setMessage({ kind: "error", text: "Couldn't save the correction." });
+        setMessage({ kind: "error", text: "Saved details, but couldn't save the items." });
       }
     } catch {
       setMessage({ kind: "error", text: "Couldn't reach the server." });
@@ -284,9 +374,7 @@ export default function OrdersAdminPage() {
       ...columns.map((c) => String(orders.reduce((s, o) => s + qtyFor(o, c), 0))),
       (revenueCents / 100).toFixed(2),
     ];
-    const csv = [header, ...rows, totals]
-      .map((r) => r.map(csvCell).join(","))
-      .join("\n");
+    const csv = [header, ...rows, totals].map((r) => r.map(csvCell).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -310,10 +398,7 @@ export default function OrdersAdminPage() {
                 borderRadius: "10px",
                 fontWeight: 600,
                 color: "white",
-                background:
-                  message.kind === "success"
-                    ? "var(--fresh-green)"
-                    : "var(--primary-red)",
+                background: message.kind === "success" ? "var(--fresh-green)" : "var(--primary-red)",
               }}
             >
               {message.text}
@@ -330,19 +415,21 @@ export default function OrdersAdminPage() {
                 placeholder="Enter admin PIN"
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
-                style={{ ...INPUT_STYLE, flex: 1, minWidth: "160px" }}
+                style={{ ...INPUT_STYLE, flex: 1, minWidth: "150px" }}
               />
               <button type="button" className="btn btn-primary" onClick={loadAll} disabled={busy}>
                 {busy ? "Working…" : "Load orders"}
               </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowCreate((v) => !v)}
+              >
+                <i className="fas fa-plus" /> Add order
+              </button>
               {loaded && (
                 <>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={parseAllPending}
-                    disabled={busy}
-                  >
+                  <button type="button" className="btn btn-secondary" onClick={parseAllPending} disabled={busy}>
                     <i className="fas fa-wand-magic-sparkles" /> Parse all pending
                   </button>
                   <button
@@ -357,6 +444,63 @@ export default function OrdersAdminPage() {
               )}
             </div>
           </div>
+
+          {showCreate && (
+            <div className="contact-info-box" style={{ marginBottom: "2rem" }}>
+              <h3 style={{ color: "var(--deep-red)", marginBottom: "1rem" }}>
+                <i className="fas fa-plus" /> Add an order (e.g. a phone order)
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem" }}>
+                <input
+                  placeholder="Customer name *"
+                  value={createForm.customer_name}
+                  onChange={(e) => setCreateForm({ ...createForm, customer_name: e.target.value })}
+                  style={INPUT_STYLE}
+                />
+                <input
+                  placeholder="Phone *"
+                  value={createForm.customer_phone}
+                  onChange={(e) => setCreateForm({ ...createForm, customer_phone: e.target.value })}
+                  style={INPUT_STYLE}
+                />
+                <input
+                  type="email"
+                  placeholder="Email (optional)"
+                  value={createForm.customer_email}
+                  onChange={(e) => setCreateForm({ ...createForm, customer_email: e.target.value })}
+                  style={INPUT_STYLE}
+                />
+                <input
+                  type="date"
+                  value={createForm.delivery_date}
+                  onChange={(e) => setCreateForm({ ...createForm, delivery_date: e.target.value })}
+                  style={INPUT_STYLE}
+                />
+              </div>
+              <textarea
+                rows={3}
+                placeholder="Order, in the customer's words * (e.g. 2 chicken biryani no spice, deliver Friday)"
+                value={createForm.raw_text}
+                onChange={(e) => setCreateForm({ ...createForm, raw_text: e.target.value })}
+                style={{ ...INPUT_STYLE, marginTop: "0.6rem", resize: "vertical" }}
+              />
+              <input
+                placeholder="Delivery notes (optional)"
+                value={createForm.delivery_notes}
+                onChange={(e) => setCreateForm({ ...createForm, delivery_notes: e.target.value })}
+                style={{ ...INPUT_STYLE, marginTop: "0.6rem" }}
+              />
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={createOrder}
+                disabled={busy}
+                style={{ marginTop: "1rem" }}
+              >
+                Save order
+              </button>
+            </div>
+          )}
 
           {loaded && menu && columns.length > 0 && (
             <div className="contact-info-box" style={{ marginBottom: "2rem", overflowX: "auto" }}>
@@ -410,9 +554,7 @@ export default function OrdersAdminPage() {
                 className="menu-item"
                 style={{
                   borderLeftColor:
-                    order.status === "needs_review"
-                      ? "var(--primary-red)"
-                      : "var(--bright-orange)",
+                    order.status === "needs_review" ? "var(--primary-red)" : "var(--bright-orange)",
                 }}
               >
                 <div className="menu-item-header">
@@ -457,13 +599,42 @@ export default function OrdersAdminPage() {
 
                     {editing === order.id ? (
                       <div style={{ marginTop: "0.5rem" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem", marginBottom: "0.4rem" }}>
+                          <input
+                            placeholder="Name"
+                            value={editDetails.customer_name}
+                            onChange={(e) => setEditDetails({ ...editDetails, customer_name: e.target.value })}
+                            style={EDIT_INPUT}
+                          />
+                          <input
+                            placeholder="Phone"
+                            value={editDetails.customer_phone}
+                            onChange={(e) => setEditDetails({ ...editDetails, customer_phone: e.target.value })}
+                            style={EDIT_INPUT}
+                          />
+                          <input
+                            type="email"
+                            placeholder="Email"
+                            value={editDetails.customer_email}
+                            onChange={(e) => setEditDetails({ ...editDetails, customer_email: e.target.value })}
+                            style={EDIT_INPUT}
+                          />
+                          <input
+                            type="date"
+                            value={editDetails.delivery_date}
+                            onChange={(e) => setEditDetails({ ...editDetails, delivery_date: e.target.value })}
+                            style={EDIT_INPUT}
+                          />
+                        </div>
+                        <input
+                          placeholder="Delivery notes"
+                          value={editDetails.delivery_notes}
+                          onChange={(e) => setEditDetails({ ...editDetails, delivery_notes: e.target.value })}
+                          style={{ ...EDIT_INPUT, width: "100%", marginBottom: "0.5rem" }}
+                        />
                         {editRows.map((row, i) => (
-                          <div
-                            key={i}
-                            style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem" }}
-                          >
+                          <div key={i} style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem" }}>
                             <input
-                              type="text"
                               placeholder="Dish"
                               value={row.item_name}
                               onChange={(e) => updateEditRow(i, "item_name", e.target.value)}
@@ -477,7 +648,6 @@ export default function OrdersAdminPage() {
                               style={{ ...EDIT_INPUT, width: "56px" }}
                             />
                             <input
-                              type="text"
                               placeholder="Notes"
                               value={row.notes}
                               onChange={(e) => updateEditRow(i, "notes", e.target.value)}
@@ -545,6 +715,9 @@ export default function OrdersAdminPage() {
                         {order.delivery_date && (
                           <p style={{ fontSize: "0.85rem", color: "#666" }}>Deliver: {order.delivery_date}</p>
                         )}
+                        {order.delivery_notes && (
+                          <p style={{ fontSize: "0.85rem", color: "#666" }}>Note: {order.delivery_notes}</p>
+                        )}
                         {order.confidence && (
                           <p style={{ fontSize: "0.85rem", color: "#666" }}>Confidence: {order.confidence}</p>
                         )}
@@ -566,7 +739,7 @@ export default function OrdersAdminPage() {
                       </button>
                     )}
                     <button type="button" className="menu-tab" onClick={() => startEdit(order)} disabled={busy}>
-                      <i className="fas fa-pen" /> Edit items
+                      <i className="fas fa-pen" /> Edit
                     </button>
                     <button
                       type="button"
@@ -593,6 +766,15 @@ export default function OrdersAdminPage() {
                       disabled={busy}
                     >
                       {order.delivered ? "✓ Delivered" : "Mark delivered"}
+                    </button>
+                    <button
+                      type="button"
+                      className="menu-tab"
+                      style={{ marginLeft: "auto", color: "var(--primary-red)" }}
+                      onClick={() => deleteOrder(order)}
+                      disabled={busy}
+                    >
+                      <i className="fas fa-trash" /> Delete
                     </button>
                   </div>
                 )}
