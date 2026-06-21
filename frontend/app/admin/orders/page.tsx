@@ -65,7 +65,7 @@ type Menu = {
   published_at: string | null;
   items: MenuItem[];
 };
-type Message = { kind: "error" | "success"; text: string };
+type Message = { kind: "error" | "success" | "info"; text: string };
 type EditRow = { item_name: string; quantity: string; notes: string };
 type DetailsForm = {
   customer_name: string;
@@ -111,6 +111,11 @@ function detailsPayload(d: DetailsForm) {
     delivery_notes: d.delivery_notes.trim() || null,
   };
 }
+function messageBg(kind: Message["kind"]): string {
+  if (kind === "success") return "var(--fresh-green)";
+  if (kind === "info") return "#475569";
+  return "var(--primary-red)";
+}
 
 export default function OrdersAdminPage() {
   const [pin, setPin] = useState("");
@@ -119,6 +124,8 @@ export default function OrdersAdminPage() {
   const [loaded, setLoaded] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [busy, setBusy] = useState(false);
+  const [parsingId, setParsingId] = useState<number | null>(null);
+  const [parsingAll, setParsingAll] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState<CreateForm>(EMPTY_CREATE);
   const [editing, setEditing] = useState<number | null>(null);
@@ -175,6 +182,10 @@ export default function OrdersAdminPage() {
   }
 
   async function createOrder() {
+    if (!pin.trim()) {
+      setMessage({ kind: "error", text: "Enter the admin PIN at the top first, then save." });
+      return;
+    }
     if (
       !createForm.customer_name.trim() ||
       !createForm.customer_phone.trim() ||
@@ -233,7 +244,8 @@ export default function OrdersAdminPage() {
 
   async function parseAllPending() {
     setBusy(true);
-    setMessage(null);
+    setParsingAll(true);
+    setMessage({ kind: "info", text: "Parsing pending orders — this can take a few seconds…" });
     try {
       const res = await adminFetch("/api/admin/orders/parse-pending", { method: "POST" });
       if (res.ok) {
@@ -249,6 +261,7 @@ export default function OrdersAdminPage() {
       setMessage({ kind: "error", text: "Couldn't reach the server." });
     } finally {
       setBusy(false);
+      setParsingAll(false);
     }
   }
 
@@ -270,7 +283,8 @@ export default function OrdersAdminPage() {
 
   async function parseOrder(order: Order) {
     setBusy(true);
-    setMessage(null);
+    setParsingId(order.id);
+    setMessage({ kind: "info", text: `Parsing order #${order.id} — this takes a few seconds…` });
     try {
       const res = await adminFetch(`/api/admin/orders/${order.id}/parse`, { method: "POST" });
       if (res.ok) {
@@ -285,6 +299,7 @@ export default function OrdersAdminPage() {
       setMessage({ kind: "error", text: "Couldn't reach the server." });
     } finally {
       setBusy(false);
+      setParsingId(null);
     }
   }
 
@@ -359,6 +374,7 @@ export default function OrdersAdminPage() {
 
   const columns = menu ? menu.items.filter((i) => i.active).map((i) => i.name) : [];
   const revenueCents = orders.reduce((s, o) => s + o.total_cents, 0);
+  const pendingCount = orders.filter((o) => o.status === "pending_parse").length;
 
   function exportCsv() {
     const header = ["Customer", "Status", ...columns, "Total"];
@@ -384,26 +400,32 @@ export default function OrdersAdminPage() {
     URL.revokeObjectURL(url);
   }
 
+  function messageBanner(extra?: CSSProperties) {
+    if (!message) return null;
+    return (
+      <div
+        style={{
+          marginBottom: "1.5rem",
+          padding: "0.85rem 1rem",
+          borderRadius: "10px",
+          fontWeight: 600,
+          color: "white",
+          background: messageBg(message.kind),
+          ...extra,
+        }}
+      >
+        {message.kind === "info" && <i className="fas fa-spinner fa-spin" />} {message.text}
+      </div>
+    );
+  }
+
   return (
     <div className="page-wrap">
       <section style={SECTION_STYLE}>
         <div className="container" style={{ maxWidth: "1080px" }}>
           <h2 className="section-title">Orders</h2>
 
-          {message && (
-            <div
-              style={{
-                marginBottom: "1.5rem",
-                padding: "0.85rem 1rem",
-                borderRadius: "10px",
-                fontWeight: 600,
-                color: "white",
-                background: message.kind === "success" ? "var(--fresh-green)" : "var(--primary-red)",
-              }}
-            >
-              {message.text}
-            </div>
-          )}
+          {messageBanner()}
 
           <div className="contact-info-box" style={{ marginBottom: "2rem" }}>
             <h3 style={{ color: "var(--deep-red)", marginBottom: "1rem" }}>
@@ -418,19 +440,24 @@ export default function OrdersAdminPage() {
                 style={{ ...INPUT_STYLE, flex: 1, minWidth: "150px" }}
               />
               <button type="button" className="btn btn-primary" onClick={loadAll} disabled={busy}>
-                {busy ? "Working…" : "Load orders"}
+                {busy && !parsingAll && parsingId === null ? "Working…" : "Load orders"}
               </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setShowCreate((v) => !v)}
-              >
+              <button type="button" className="btn btn-secondary" onClick={() => setShowCreate((v) => !v)}>
                 <i className="fas fa-plus" /> Add order
               </button>
               {loaded && (
                 <>
                   <button type="button" className="btn btn-secondary" onClick={parseAllPending} disabled={busy}>
-                    <i className="fas fa-wand-magic-sparkles" /> Parse all pending
+                    {parsingAll ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin" /> Parsing…
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-wand-magic-sparkles" /> Parse all pending
+                        {pendingCount > 0 ? ` (${pendingCount})` : ""}
+                      </>
+                    )}
                   </button>
                   <button
                     type="button"
@@ -450,6 +477,19 @@ export default function OrdersAdminPage() {
               <h3 style={{ color: "var(--deep-red)", marginBottom: "1rem" }}>
                 <i className="fas fa-plus" /> Add an order (e.g. a phone order)
               </h3>
+              {!pin.trim() && (
+                <p
+                  style={{
+                    color: "var(--primary-red)",
+                    fontWeight: 600,
+                    marginBottom: "0.75rem",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  <i className="fas fa-circle-info" /> Enter the admin PIN at the top of the page
+                  first, then save.
+                </p>
+              )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem" }}>
                 <input
                   placeholder="Customer name *"
@@ -490,6 +530,7 @@ export default function OrdersAdminPage() {
                 onChange={(e) => setCreateForm({ ...createForm, delivery_notes: e.target.value })}
                 style={{ ...INPUT_STYLE, marginTop: "0.6rem" }}
               />
+              {messageBanner({ marginTop: "1rem", marginBottom: 0 })}
               <button
                 type="button"
                 className="btn btn-primary"
@@ -555,6 +596,7 @@ export default function OrdersAdminPage() {
                 style={{
                   borderLeftColor:
                     order.status === "needs_review" ? "var(--primary-red)" : "var(--bright-orange)",
+                  opacity: parsingId === order.id ? 0.85 : 1,
                 }}
               >
                 <div className="menu-item-header">
@@ -562,7 +604,7 @@ export default function OrdersAdminPage() {
                     #{order.id} · {order.customer_name}
                   </h3>
                   <span className={`badge ${statusClass(order.status)}`}>
-                    {order.status.replace("_", " ")}
+                    {parsingId === order.id ? "parsing…" : order.status.replace("_", " ")}
                   </span>
                 </div>
                 <p style={{ color: "#666", fontSize: "0.85rem", marginBottom: "0.75rem" }}>
@@ -688,12 +730,16 @@ export default function OrdersAdminPage() {
                           </button>
                         </div>
                       </div>
+                    ) : parsingId === order.id ? (
+                      <p style={{ marginTop: "0.4rem", color: "var(--bright-orange)", fontWeight: 600 }}>
+                        <i className="fas fa-spinner fa-spin" /> Parsing… reading the order against this week&apos;s menu.
+                      </p>
                     ) : (
                       <div style={{ marginTop: "0.4rem" }}>
                         {order.items.length === 0 ? (
                           <p style={{ color: "#999" }}>
                             {order.status === "pending_parse"
-                              ? "Not parsed yet."
+                              ? "Not parsed yet — press Parse."
                               : "No items — review the raw text."}
                           </p>
                         ) : (
@@ -735,7 +781,15 @@ export default function OrdersAdminPage() {
                   <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem" }}>
                     {order.status === "pending_parse" && (
                       <button type="button" className="menu-tab" onClick={() => parseOrder(order)} disabled={busy}>
-                        <i className="fas fa-wand-magic-sparkles" /> Parse
+                        {parsingId === order.id ? (
+                          <>
+                            <i className="fas fa-spinner fa-spin" /> Parsing…
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-wand-magic-sparkles" /> Parse
+                          </>
+                        )}
                       </button>
                     )}
                     <button type="button" className="menu-tab" onClick={() => startEdit(order)} disabled={busy}>
