@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local databases (SQLite dev file — migrations are committed, the data is not)
+*.db
+*.sqlite3
+*.db.bak
+
+# Redundant factory staging artifacts (the factory is installed at the repo root)
+family-catering-factory/
+family-catering-factory.zip
+
+# Env / secrets (never commit real values)
+.env
+.env*.local
+
+# Logs
+*.log
