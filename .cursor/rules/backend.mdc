@@ -1,0 +1,18 @@
+---
+description: Backend (FastAPI) conventions, applied when working in backend/
+globs: ["backend/**/*.py"]
+alwaysApply: false
+---
+
+# Backend Conventions
+
+- Type-hint everything. Pydantic schemas for all request/response
+  bodies. No bare `except:`.
+- Business logic in `services/`, never in route handlers.
+- Money: integer cents or `Decimal`, never float.
+- Order parsing logic must follow @../../.ai/order-parsing.md exactly —
+  raw text persisted before parse attempt, schema-validated structured
+  output, confidence-driven status.
+
+Full architecture reference: @../../api/.ai-knowledge/backend-architecture.md
+Tech stack/commands: @../../api/.ai-knowledge/backend-tech-stack.md

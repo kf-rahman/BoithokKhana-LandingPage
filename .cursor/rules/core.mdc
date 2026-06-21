@@ -1,0 +1,23 @@
+---
+description: Core project context, always applied
+alwaysApply: true
+---
+
+# Family Catering Order System — Core Context
+
+Replacing a manual WhatsApp + Excel order-intake process for a small
+family catering business. Two surfaces: a public free-text order form
+for customers, and an admin dashboard for Dad (non-technical) showing
+raw + structured order data with CSV export.
+
+Full context: @../../.ai/project-brief.md
+Engineering standards and non-negotiables: @../../.ai/engineering.md
+Order parsing contract: @../../.ai/order-parsing.md
+
+Non-negotiables (do not violate these under any circumstance):
+1. Raw customer order text is never overwritten or deleted.
+2. The parser never invents order items — uncertainty routes to manual
+   review, never a guess.
+3. Money is integer cents or Decimal, never float.
+4. Timezones are explicit — UTC stored, local time displayed.
+5. Admin auth method is an open decision — don't assume it.

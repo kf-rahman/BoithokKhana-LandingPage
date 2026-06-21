@@ -1,0 +1,21 @@
+---
+description: Frontend (Next.js) conventions, applied when working in frontend/
+globs: ["frontend/**/*.tsx", "frontend/**/*.ts"]
+alwaysApply: false
+---
+
+# Frontend Conventions
+
+- Server Components by default; Client Components only where
+  interactivity is required.
+- No `any`. Co-locate component types with the component.
+- Keep components under ~200 lines.
+- `needs_review` orders must be visually distinct, never a small badge.
+- Every screen must implement loading, empty, error, and any
+  domain-specific states the spec defines — not just the happy path.
+- This UI is used by a non-technical end user (Dad) on the admin side,
+  and by customers quickly on their phones on the order side. Favor
+  obvious over clever.
+
+Full architecture reference: @../../web/.ai-knowledge/frontend-architecture.md
+Tech stack/commands: @../../web/.ai-knowledge/frontend-tech-stack.md

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'FILE=$(echo \"$TOOL_INPUT\" | grep -oE \"[a-zA-Z0-9_./-]+\\.py\" | head -1); if [ -n \"$FILE\" ] && echo \"$FILE\" | grep -q \"backend/\"; then grep -nE \"\\b(price|amount|cost|total)\\b.*:\\s*float\\b\" \"$FILE\" 2>/dev/null && echo \"WARNING: possible float used for a money field in $FILE — per .ai/engineering.md this must be integer cents or Decimal\" || true; fi'"
+          }
+        ]
+      }
+    ]
+  }
+}
