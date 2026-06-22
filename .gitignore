@@ -5,7 +5,10 @@ __pycache__/
 venv/
 .pytest_cache/
 *.db
+*.db-wal
+*.db-shm
 *.sqlite3
+*.bak
 
 # Node / Next.js
 node_modules/

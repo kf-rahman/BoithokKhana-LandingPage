@@ -1,0 +1,14 @@
+fastapi==0.111.0
+uvicorn[standard]
+sqlalchemy[asyncio]>=2.0
+aiosqlite
+asyncpg
+alembic
+pydantic[email]>=2
+pydantic-settings
+anthropic==0.111.0
+# dev / test
+pytest
+pytest-asyncio
+httpx
+asgi-lifespan
