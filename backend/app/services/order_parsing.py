@@ -12,6 +12,7 @@ from typing import Any, Literal
 
 import anthropic
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -142,3 +143,16 @@ def parse_order(db: Session, order: Order) -> Order:
     db.commit()
     db.refresh(order)
     return order
+
+
+def parse_pending_orders(db: Session) -> list[Order]:
+    """Parse every pending order. A single parse failure is skipped (its
+    order stays pending) rather than aborting the batch."""
+    pending = list(db.execute(select(Order).where(Order.status == "pending_parse")).scalars().all())
+    parsed: list[Order] = []
+    for order in pending:
+        try:
+            parsed.append(parse_order(db, order))
+        except ParseFailed:
+            continue
+    return parsed

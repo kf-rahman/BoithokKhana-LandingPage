@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import models  # noqa: F401 - register models for create_all
+from app.api.admin import router as admin_router
 from app.api.routes import router
 from app.config import settings
 from app.db import Base, engine
@@ -31,6 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(admin_router)
 
 
 @app.get("/health")

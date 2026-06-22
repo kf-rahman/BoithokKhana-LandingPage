@@ -53,3 +53,27 @@ class OrderRead(BaseModel):
     delivery_confidence: Confidence | None
     status: OrderStatus
     created_at: datetime
+    corrected_at: datetime | None
+    correction_note: str | None
+
+
+class MenuWeekCreate(BaseModel):
+    week_start_date: date
+    items: list[MenuItem] = Field(min_length=1)
+
+
+class CorrectionItem(BaseModel):
+    name: str
+    quantity: int = Field(ge=1)
+    modifiers: list[str] = []
+    notes: str | None = None
+
+
+class OrderCorrection(BaseModel):
+    """Admin correction / status update. raw_text is intentionally absent —
+    it can never be changed."""
+
+    items: list[CorrectionItem] | None = None
+    delivery_date: date | None = None
+    correction_note: str | None = None
+    status: OrderStatus | None = None

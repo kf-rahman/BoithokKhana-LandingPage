@@ -49,9 +49,10 @@ cd frontend && npm test
    always stored alongside the structured parse.
 2. The parser never invents order items, quantities, or modifiers. If
    uncertain, it flags the order for manual review instead of guessing.
-3. Admin auth method is not decided yet — don't assume shared-password
-   vs. real login; this needs an explicit human decision before the
-   admin dashboard spec is finalized.
+3. Admin auth: **shared PIN** via the `X-Admin-Pin` header, value from the
+   `ADMIN_PIN` env var (default `1234` — change before real use). This was
+   the product owner's explicit decision; not a real login — revisit if
+   multiple staff or stronger auth become necessary.
 
 ## Data model (current)
 

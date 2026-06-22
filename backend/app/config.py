@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-opus-4-8"
 
+    # Admin dashboard shared PIN (explicit, changeable decision — not a real
+    # login). Change ADMIN_PIN before real use.
+    admin_pin: str = "1234"
+
     cors_origins: list[str] = ["http://localhost:3000"]
 
 
