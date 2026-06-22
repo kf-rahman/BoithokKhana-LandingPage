@@ -17,7 +17,8 @@ data via the Claude API, not regex.
 - Backend: FastAPI (Python), SQLAlchemy, Alembic
 - DB: PostgreSQL (Docker Compose locally)
 - Parsing: Claude API, called server-side
-- Local only for now — no deployment config unless asked.
+- Local dev: SQLite (no Docker). Deploy: Dockerfile + docker-compose
+  (Postgres) added per specs/deployment.md.
 
 ## Commands
 
@@ -61,7 +62,8 @@ Order: id, raw_text, structured_items (json), delivery_date,
        item_confidence, delivery_confidence, status
        (pending_parse | parsed | needs_review), menu_week_id (fk),
        customer_name, customer_contact, created_at, corrected_at,
-       correction_note
+       correction_note, confirmation_email_sent (bool), delivered (bool)
+       [+ total_cents: computed from structured_items, integer cents]
 
 MenuWeek: id, week_start_date, items (json)
 ```

@@ -18,7 +18,10 @@ def orders_to_csv(orders: list[Order]) -> str:
             "Contact",
             "Status",
             "Items",
+            "Total ($)",
             "Delivery date",
+            "Email sent",
+            "Delivered",
             "Item confidence",
             "Delivery confidence",
         ]
@@ -40,7 +43,10 @@ def orders_to_csv(orders: list[Order]) -> str:
                 order.customer_contact,
                 order.status,
                 "; ".join(parts),
+                f"{order.total_cents / 100:.2f}",
                 order.delivery_date.isoformat() if order.delivery_date else "",
+                "yes" if order.confirmation_email_sent else "no",
+                "yes" if order.delivered else "no",
                 order.item_confidence or "",
                 order.delivery_confidence or "",
             ]

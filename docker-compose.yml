@@ -1,0 +1,29 @@
+# Postgres + API. Local dev without Docker still works (API defaults to
+# SQLite) — see AGENTS.md. The backend uses the sync psycopg driver for PG.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: catering
+      POSTGRES_PASSWORD: catering
+      POSTGRES_DB: catering
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://catering:catering@db:5432/catering
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: claude-opus-4-8
+      ADMIN_PIN: ${ADMIN_PIN:-1234}
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:

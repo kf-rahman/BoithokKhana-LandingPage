@@ -55,6 +55,9 @@ class OrderRead(BaseModel):
     created_at: datetime
     corrected_at: datetime | None
     correction_note: str | None
+    confirmation_email_sent: bool
+    delivered: bool
+    total_cents: int
 
 
 class MenuWeekCreate(BaseModel):
@@ -77,3 +80,5 @@ class OrderCorrection(BaseModel):
     delivery_date: date | None = None
     correction_note: str | None = None
     status: OrderStatus | None = None
+    confirmation_email_sent: bool | None = None
+    delivered: bool | None = None

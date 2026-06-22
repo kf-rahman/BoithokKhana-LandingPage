@@ -96,6 +96,15 @@ def correct_order(db: Session, order: Order, payload: OrderCorrection) -> Order:
         order.correction_note = payload.correction_note
     if payload.delivery_date is not None:
         order.delivery_date = payload.delivery_date
+    if payload.confirmation_email_sent is not None:
+        order.confirmation_email_sent = payload.confirmation_email_sent
+    if payload.delivered is not None:
+        order.delivered = payload.delivered
     db.commit()
     db.refresh(order)
     return order
+
+
+def delete_order(db: Session, order: Order) -> None:
+    db.delete(order)
+    db.commit()

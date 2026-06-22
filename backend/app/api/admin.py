@@ -71,3 +71,10 @@ def correct(order_id: UUID, payload: OrderCorrection, db: Session = Depends(get_
 @router.post("/menus", response_model=MenuWeekRead, status_code=201)
 def publish_menu(payload: MenuWeekCreate, db: Session = Depends(get_db)) -> MenuWeekRead:
     return menus.create_menu_week(db, payload)  # type: ignore[return-value]
+
+
+@router.delete("/orders/{order_id}", status_code=204)
+def delete(order_id: UUID, db: Session = Depends(get_db)) -> Response:
+    order = _get_order_or_404(db, order_id)
+    orders.delete_order(db, order)
+    return Response(status_code=204)

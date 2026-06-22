@@ -31,6 +31,9 @@ export type Order = {
   created_at: string;
   corrected_at: string | null;
   correction_note: string | null;
+  confirmation_email_sent: boolean;
+  delivered: boolean;
+  total_cents: number;
 };
 
 export type MenuItem = { name: string; price_cents: number };

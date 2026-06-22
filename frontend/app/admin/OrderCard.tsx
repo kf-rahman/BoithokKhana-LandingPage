@@ -23,11 +23,13 @@ export default function OrderCard({
   order,
   pin,
   onUpdated,
+  onDeleted,
   onError,
 }: {
   order: Order;
   pin: string;
   onUpdated: (o: Order) => void;
+  onDeleted: (id: string) => void;
   onError: (message: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -76,6 +78,26 @@ export default function OrderCard({
     } finally {
       setBusy(false);
       setParsing(false);
+    }
+  }
+
+  async function del() {
+    if (!window.confirm(`Delete order #${order.id.slice(0, 8)} from ${order.customer_name}? This can't be undone.`)) {
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/orders/${order.id}`, {
+        method: "DELETE",
+        headers: { "X-Admin-Pin": pin },
+      });
+      if (res.status === 204) onDeleted(order.id);
+      else if (res.status === 401) onError("Wrong admin PIN.");
+      else onError("Couldn't delete the order.");
+    } catch {
+      onError("Couldn't reach the server.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -191,7 +213,14 @@ export default function OrderCard({
         </div>
 
         <div>
-          <strong style={{ color: "var(--deep-red)" }}>Structured</strong>
+          <strong style={{ color: "var(--deep-red)" }}>
+            Structured{" "}
+            {order.total_cents > 0 && (
+              <span style={{ color: "var(--deep-green)", fontWeight: 700 }}>
+                · {money(order.total_cents)}
+              </span>
+            )}
+          </strong>
 
           {editing ? (
             <div style={{ marginTop: "0.5rem" }}>
@@ -342,6 +371,41 @@ export default function OrderCard({
           )}
           <button type="button" className="menu-tab" onClick={startEdit} disabled={busy}>
             <i className="fas fa-pen" /> Edit
+          </button>
+          <button
+            type="button"
+            className="menu-tab"
+            style={
+              order.confirmation_email_sent
+                ? { background: "var(--fresh-green)", color: "white", borderColor: "var(--fresh-green)" }
+                : {}
+            }
+            onClick={() => patch({ confirmation_email_sent: !order.confirmation_email_sent })}
+            disabled={busy}
+          >
+            {order.confirmation_email_sent ? "✓ Email sent" : "Mark email sent"}
+          </button>
+          <button
+            type="button"
+            className="menu-tab"
+            style={
+              order.delivered
+                ? { background: "var(--fresh-green)", color: "white", borderColor: "var(--fresh-green)" }
+                : {}
+            }
+            onClick={() => patch({ delivered: !order.delivered })}
+            disabled={busy}
+          >
+            {order.delivered ? "✓ Delivered" : "Mark delivered"}
+          </button>
+          <button
+            type="button"
+            className="menu-tab"
+            style={{ marginLeft: "auto", color: "var(--primary-red)" }}
+            onClick={del}
+            disabled={busy}
+          >
+            <i className="fas fa-trash" /> Delete
           </button>
         </div>
       )}

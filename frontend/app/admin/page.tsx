@@ -4,7 +4,8 @@ import { useState, type CSSProperties } from "react";
 import { API_BASE_URL } from "@/lib/api";
 import MenuPublish from "./MenuPublish";
 import OrderCard from "./OrderCard";
-import type { MenuWeek, Order } from "./types";
+import OrdersTable from "./OrdersTable";
+import { money, type MenuWeek, type Order } from "./types";
 
 const SECTION_STYLE: CSSProperties = {
   padding: "4rem 2rem",
@@ -38,6 +39,11 @@ export default function AdminPage() {
 
   function applyUpdated(updated: Order) {
     setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+  }
+
+  function removeOrder(id: string) {
+    setOrders((prev) => prev.filter((o) => o.id !== id));
+    setMessage({ kind: "success", text: "Order deleted." });
   }
 
   async function loadAll() {
@@ -115,6 +121,7 @@ export default function AdminPage() {
 
   const pendingCount = orders.filter((o) => o.status === "pending_parse").length;
   const reviewCount = orders.filter((o) => o.status === "needs_review").length;
+  const revenueCents = orders.reduce((sum, o) => sum + o.total_cents, 0);
 
   return (
     <div className="page-wrap">
@@ -193,6 +200,9 @@ export default function AdminPage() {
               <div className="contact-info-box" style={{ marginBottom: "2rem" }}>
                 <h3 style={{ color: "var(--deep-red)", marginBottom: "0.5rem" }}>
                   <i className="fas fa-chart-simple" /> This week
+                  <span style={{ float: "right", color: "var(--deep-green)" }}>
+                    Revenue: {money(revenueCents)}
+                  </span>
                 </h3>
                 <p style={{ color: "#666" }}>
                   {orders.length} order(s) · {pendingCount} pending ·{" "}
@@ -205,6 +215,8 @@ export default function AdminPage() {
             </>
           )}
 
+          {loaded && orders.length > 0 && <OrdersTable orders={orders} />}
+
           {loaded && orders.length === 0 && <p style={{ color: "#666" }}>No orders yet.</p>}
 
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -214,6 +226,7 @@ export default function AdminPage() {
                 order={order}
                 pin={pin}
                 onUpdated={applyUpdated}
+                onDeleted={removeOrder}
                 onError={(text) => setMessage({ kind: "error", text })}
               />
             ))}

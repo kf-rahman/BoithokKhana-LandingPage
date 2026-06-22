@@ -91,3 +91,55 @@ def test_csv_export_contains_order(client, seed_menu, monkeypatch):
     assert "text/csv" in res.headers["content-type"]
     assert "Order ID" in res.text
     assert "Csv Person" in res.text
+
+
+def test_order_total_cents(client, seed_menu, monkeypatch):
+    seed_menu(
+        [{"name": "Chicken Biryani", "price_cents": 1200}, {"name": "Veg Thali", "price_cents": 1000}]
+    )
+    monkeypatch.setattr(
+        order_parsing,
+        "_request_structured_parse",
+        _fake(
+            items=[{"name": "Chicken Biryani", "quantity": 2}, {"name": "Veg Thali", "quantity": 1}],
+            item_confidence="high",
+            delivery_confidence="high",
+        ),
+    )
+    body = client.post("/api/orders", json={**ORDER, "raw_text": "2 biryani 1 thali"}).json()
+    assert body["total_cents"] == 3400  # 2*1200 + 1*1000
+
+
+def test_toggle_fulfillment_flags(client, monkeypatch):
+    monkeypatch.setattr(
+        order_parsing,
+        "_request_structured_parse",
+        _fake(items=[], item_confidence="high", delivery_confidence="high"),
+    )
+    created = client.post("/api/orders", json={**ORDER, "raw_text": "x"}).json()
+    assert created["confirmation_email_sent"] is False
+    assert created["delivered"] is False
+
+    res = client.patch(
+        f"/api/admin/orders/{created['id']}",
+        headers=ADMIN,
+        json={"confirmation_email_sent": True, "delivered": True},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["confirmation_email_sent"] is True
+    assert body["delivered"] is True
+    assert body["raw_text"] == "x"  # flags don't touch raw text
+
+
+def test_delete_order(client, monkeypatch):
+    monkeypatch.setattr(
+        order_parsing,
+        "_request_structured_parse",
+        _fake(items=[], item_confidence="high", delivery_confidence="high"),
+    )
+    created = client.post("/api/orders", json={**ORDER, "raw_text": "to delete"}).json()
+    assert len(client.get("/api/admin/orders", headers=ADMIN).json()) == 1
+    assert client.delete(f"/api/admin/orders/{created['id']}").status_code == 401  # needs PIN
+    assert client.delete(f"/api/admin/orders/{created['id']}", headers=ADMIN).status_code == 204
+    assert len(client.get("/api/admin/orders", headers=ADMIN).json()) == 0

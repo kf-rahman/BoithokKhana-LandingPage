@@ -10,7 +10,7 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Any
 
-from sqlalchemy import JSON, Date, DateTime, ForeignKey, String, Uuid
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -60,3 +60,17 @@ class Order(Base):
     # Set when Dad corrects the parse (admin side — separate feature).
     corrected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     correction_note: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    confirmation_email_sent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    delivered: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    @property
+    def total_cents(self) -> int:
+        """Sum of matched line items, in integer cents (never float)."""
+        total = 0
+        for item in (self.structured_items or {}).get("items", []):
+            price = item.get("unit_price_cents")
+            qty = item.get("quantity")
+            if isinstance(price, int) and isinstance(qty, int):
+                total += price * qty
+        return total
