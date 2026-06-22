@@ -1,32 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   const close = () => setOpen(false);
 
   return (
-    <header
-      style={{
-        boxShadow: scrolled
-          ? "0 4px 30px rgba(220, 38, 38, 0.4)"
-          : "0 4px 20px rgba(220, 38, 38, 0.3)",
-      }}
-    >
+    <header>
       <nav>
         <Link href="/" className="logo" onClick={close}>
-          <i className="fas fa-utensils" />
-          Boithok Khana
+          <i className="fas fa-utensils" /> Boithok Khana
         </Link>
         <ul className={`nav-links${open ? " active" : ""}`}>
           <li>
