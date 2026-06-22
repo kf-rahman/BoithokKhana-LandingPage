@@ -3,8 +3,9 @@
 - **Framework:** Next.js (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
-- **Testing:** Jest + React Testing Library (or Vitest — confirm on
-  project init; update this file once decided)
+- **Testing:** none wired up yet. `tsc --noEmit` (`npm run type-check`) is
+  the current guard; a component test runner (Vitest + RTL) is a deliberate
+  follow-up, not yet added. Update this file when it is.
 
 ## Commands
 

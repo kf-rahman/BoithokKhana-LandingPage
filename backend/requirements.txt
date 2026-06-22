@@ -3,6 +3,7 @@ uvicorn[standard]
 sqlalchemy[asyncio]>=2.0
 aiosqlite
 asyncpg
+psycopg[binary]
 alembic
 pydantic[email]>=2
 pydantic-settings
