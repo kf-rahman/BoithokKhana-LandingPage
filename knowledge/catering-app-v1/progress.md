@@ -20,10 +20,11 @@
 - [x] Scaffold Next.js + brand CSS/layout/nav reused from the shared base
 - [x] lib/api.ts; components (Header/Footer/HealthStatus); root layout
 - [x] app/order/page.tsx (form + this week's menu + confirmation/error/loading)
-- [x] app/admin/page.tsx + OrderCard + MenuPublish + types (PIN gate,
-      raw|structured side by side, needs_review distinct banner, inline
-      correction editor with menu re-matching, delivery-confirm prompt,
-      parse / parse-all with spinners, menu publish, CSV export)
+- [x] app/admin/page.tsx + OrderCard + MenuPublish + OrdersTable + types
+      (PIN gate, birds-eye overview table of all orders, raw|structured
+      side by side per card, needs_review distinct banner, inline correction
+      editor with menu re-matching, delivery-confirm prompt, parse /
+      parse-all with spinners, menu publish, CSV export)
 - [x] type-check clean
 
 ## Wrap-up  ✅

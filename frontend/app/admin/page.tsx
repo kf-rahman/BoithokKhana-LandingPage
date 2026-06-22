@@ -4,6 +4,7 @@ import { useState, type CSSProperties } from "react";
 import { API_BASE_URL } from "@/lib/api";
 import MenuPublish from "./MenuPublish";
 import OrderCard from "./OrderCard";
+import OrdersTable from "./OrdersTable";
 import { money, type MenuWeek, type Order } from "./types";
 
 const SECTION_STYLE: CSSProperties = {
@@ -208,6 +209,8 @@ export default function AdminPage() {
               </div>
             </>
           )}
+
+          {loaded && orders.length > 0 && <OrdersTable orders={orders} />}
 
           {loaded && orders.length === 0 && <p style={{ color: "#666" }}>No orders yet.</p>}
 
