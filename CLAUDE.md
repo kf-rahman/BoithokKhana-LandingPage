@@ -39,9 +39,10 @@ parser gets it wrong" are first-class concerns, not edge cases.
   contract and output schema.
 - **Local dev:** everything runs on localhost for now. Frontend on
   `:3000`, backend on `:8000`, Postgres via Docker Compose.
-- **Deployment target (later, not yet):** Vercel for frontend; backend
-  host TBD (Railway/Render/Fly are reasonable defaults if asked). Do not
-  add deployment config unless explicitly asked to.
+- **Deployment:** deploy config now lives in the repo (backend `Dockerfile`,
+  root `docker-compose.yml`, `frontend/Dockerfile`) — see `DEPLOY.md`.
+  Intended hosts: Vercel for the frontend; Railway/Render/Fly for the backend +
+  Postgres (host not yet chosen).
 
 ## Repository structure
 
@@ -143,13 +144,14 @@ those are exactly the places where ambiguity becomes a real-world mistake
 - Admin dashboard changes must be reviewed especially carefully — Dad is
   not a developer and will not debug a confusing UI. Favor obvious over
   clever.
-- Auth model for the admin site is an **open decision** — flagged in
-  every spec touching `/admin` until explicitly resolved. Do not assume
-  shared-password vs. real login; ask.
+- Admin auth is a **v1 shared PIN** (`X-Admin-Pin` header, value from the
+  `ADMIN_PIN` env var). This was the product owner's decision — not a real
+  login. Revisit if multiple staff or stronger auth become necessary.
 
 ## PR review checklist
 
 See `docs/pr-checklist.md`. Every AI-generated PR must be checked against
 it before merge — no exceptions, including PRs that only touch tests or
 docs.
-Make sure you work on this on the branch titled workflow-1
+This branch (`merge-wf1-wf3`) is the integrated app: the workflow-1 base with
+workflow-3's component-split admin dashboard ported onto it.

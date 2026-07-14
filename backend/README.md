@@ -28,4 +28,7 @@ python -m pytest
 > before committing** (or install the deps into your active environment) or the
 > hook will block the commit.
 
-> PostgreSQL (SQLAlchemy + Alembic) is not wired yet — it's added in a later task.
+> **Database:** local dev and tests run on SQLite with no setup. For
+> Postgres, set `DATABASE_URL=postgresql+psycopg://user:pass@host:5432/db` and
+> run `alembic upgrade head` (migrations live in `alembic/`). The Docker image
+> applies migrations automatically on start.

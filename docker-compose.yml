@@ -1,10 +1,11 @@
-# Local production-like stack: Postgres + the FastAPI backend.
-# The Next.js frontend deploys separately (e.g. Vercel) — point its
-# NEXT_PUBLIC_API_URL at this backend.
+# Local production-like stack: Postgres + FastAPI backend + Next.js frontend.
+# `docker compose up --build` brings up all three: db, API on :8000, web on
+# :3000. In production the frontend can instead deploy to Vercel — just point
+# its NEXT_PUBLIC_API_URL at the backend. See DEPLOY.md.
 #
 # Secrets come from a root .env file (gitignored) that Compose reads for
 # ${VAR} substitution — set ADMIN_PIN, ANTHROPIC_API_KEY, SMTP_* there.
-# See backend/.env.example for the full list.
+# See env.example for the full list.
 
 services:
   db:
@@ -39,6 +40,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # NEXT_PUBLIC_* is inlined at build time; the browser (on the host)
+        # reaches the API via the published port, hence localhost:8000.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
 
 volumes:
   pgdata:
