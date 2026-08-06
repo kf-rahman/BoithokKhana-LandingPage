@@ -8,6 +8,13 @@
 # Render asks for them once, at blueprint apply time, and stores them itself.
 # Never put ADMIN_PIN or ANTHROPIC_API_KEY in here — this file is committed.
 
+# NOTE: no `region:` is pinned anywhere on purpose, so every resource lands in
+# Render's default region. The database and the services MUST share a region:
+# the API reaches Postgres over Render's private network, and that internal
+# hostname (dpg-...-a) only resolves within a single region. Pinning the
+# services to one region while the database defaulted to another is exactly
+# what broke the first deploy.
+
 databases:
   - name: boithok-db
     databaseName: boithok
@@ -27,7 +34,6 @@ services:
     # Free instances sleep after 15 minutes idle and take ~50s to wake. Good
     # enough for testing; upgrade to `starter` before customers rely on it.
     plan: free
-    region: ohio
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
@@ -60,7 +66,6 @@ services:
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: .
     plan: free
-    region: ohio
     domains:
       - www.boithokkhana.ca
       - boithokkhana.ca
