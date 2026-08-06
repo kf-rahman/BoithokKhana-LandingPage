@@ -1,0 +1,22 @@
+# Root build context (used by frontend/Dockerfile, which needs index.html).
+.git
+.venv
+venv
+node_modules
+frontend/node_modules
+frontend/.next
+frontend/out
+backend/.venv
+**/__pycache__
+*.py[cod]
+.pytest_cache
+*.db
+*.sqlite3
+*.db.bak
+.env
+.env*.local
+*.log
+family-catering-factory
+family-catering-factory.zip
+npm-debug.log*
+.DS_Store

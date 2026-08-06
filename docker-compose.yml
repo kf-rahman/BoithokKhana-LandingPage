@@ -43,7 +43,10 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      # Root context: the build needs index.html (the marketing site served at
+      # "/"), which lives outside frontend/. See frontend/Dockerfile.
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         # NEXT_PUBLIC_* is inlined at build time; the browser (on the host)
         # reaches the API via the published port, hence localhost:8000.

@@ -49,7 +49,7 @@ export default function Footer() {
               className="fas fa-map-marker-alt"
               style={{ color: "var(--golden-yellow)", marginRight: "0.5rem" }}
             />{" "}
-            824 Florell Dr, Oshawa, ON
+            Oshawa, ON
           </p>
           <p style={{ marginBottom: "0.5rem" }}>
             <i

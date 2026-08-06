@@ -39,10 +39,13 @@ parser gets it wrong" are first-class concerns, not edge cases.
   contract and output schema.
 - **Local dev:** everything runs on localhost for now. Frontend on
   `:3000`, backend on `:8000`, Postgres via Docker Compose.
-- **Deployment:** deploy config now lives in the repo (backend `Dockerfile`,
-  root `docker-compose.yml`, `frontend/Dockerfile`) — see `DEPLOY.md`.
-  Intended hosts: Vercel for the frontend; Railway/Render/Fly for the backend +
-  Postgres (host not yet chosen).
+- **Deployment:** Render, declared by `render.yaml` (Postgres + API + web).
+  Everything is served from one hostname, `www.boithokkhana.ca`: `/` is the
+  marketing site (root `index.html`), plus `/order`, `/admin`, and `/api/*`
+  proxied to the backend by `frontend/app/api/[...path]/route.ts`. One origin
+  means no CORS and no public URL for the API. See `DEPLOY.md`.
+- **Error reporting:** Sentry, inert until `SENTRY_DSN` is set. Customer order
+  text is deliberately scrubbed — see `backend/app/observability.py`.
 
 ## Repository structure
 

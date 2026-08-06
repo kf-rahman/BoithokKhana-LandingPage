@@ -12,6 +12,10 @@ env/
 
 # Node / Next.js
 node_modules/
+
+# Build-time copy of the root index.html (see frontend/scripts/sync-marketing.mjs).
+# Root index.html is the source of truth; this copy must never be committed.
+frontend/public/site.html
 .next/
 out/
 *.tsbuildinfo

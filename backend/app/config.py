@@ -1,5 +1,6 @@
 """Application settings, overridable via environment variables or a .env file."""
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -31,6 +32,39 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from: str = "orders@boithokkhana.ca"
     smtp_use_tls: bool = True
+
+    # Error reporting (Sentry). Blank DSN = disabled, which is the default:
+    # nothing is sent anywhere until SENTRY_DSN is set. See app/observability.py.
+    sentry_dsn: str = ""
+    # Tags events so staging noise never gets mistaken for a real customer
+    # problem in production.
+    sentry_environment: str = "development"
+    # Fraction of requests traced for performance (0.0 = errors only). Kept at
+    # zero so the free tier's quota is spent on errors, not traces.
+    sentry_traces_sample_rate: float = 0.0
+
+    @field_validator("database_url")
+    @classmethod
+    def _normalise_database_url(cls, value: str) -> str:
+        """Accept the `postgres://` URLs that hosting providers hand out.
+
+        Render (and Heroku, and several others) inject DATABASE_URL in the form
+        `postgres://user:pass@host/db`. SQLAlchemy 2.x does not recognise that
+        scheme and fails at import time with:
+
+            Can't load plugin: sqlalchemy.dialects:postgres
+
+        Rewriting it here means the app boots from a provider-supplied URL
+        unchanged, and both the engine and Alembic (which read this same
+        setting) stay consistent.
+        """
+        if value.startswith("postgres://"):
+            return "postgresql+psycopg://" + value[len("postgres://") :]
+        # `postgresql://` alone would pick SQLAlchemy's default driver
+        # (psycopg2), which isn't installed — psycopg 3 is. Be explicit.
+        if value.startswith("postgresql://"):
+            return "postgresql+psycopg://" + value[len("postgresql://") :]
+        return value
 
 
 settings = Settings()

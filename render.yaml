@@ -1,0 +1,79 @@
+# Render blueprint — the whole app: Postgres + FastAPI API + Next.js web.
+#
+# To deploy: Render Dashboard -> New -> Blueprint -> pick this repo. Render
+# reads this file and creates all three services. See DEPLOY.md for the full
+# walkthrough, including the GoDaddy DNS records.
+#
+# Secrets are deliberately NOT in this file (`sync: false` means "prompt me").
+# Render asks for them once, at blueprint apply time, and stores them itself.
+# Never put ADMIN_PIN or ANTHROPIC_API_KEY in here — this file is committed.
+
+databases:
+  - name: boithok-db
+    databaseName: boithok
+    user: boithok
+    plan: basic-256mb # Smallest paid tier. `free` expires after 30 days.
+
+services:
+  # ---------------------------------------------------------------- API ----
+  - type: web
+    name: boithok-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter # Free tier sleeps after 15 min; a sleeping API means a
+    # customer's order fails. Not worth saving $7 on.
+    region: ohio
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: boithok-db
+          property: connectionString
+      # Render hands out a plain postgres:// URL, which SQLAlchemy rejects;
+      # app/config.py rewrites it to postgresql+psycopg:// on load.
+      - key: ADMIN_PIN
+        sync: false # Render prompts. Use something better than 1234.
+      - key: ANTHROPIC_API_KEY
+        sync: false # Order parsing is off until this is set.
+      - key: ANTHROPIC_MODEL
+        value: claude-opus-4-8
+      # The browser only ever talks to the web service (which proxies /api),
+      # so no cross-origin request is made and this can stay closed.
+      - key: CORS_ORIGINS
+        value: '["https://www.boithokkhana.ca","https://boithokkhana.ca"]'
+      - key: SENTRY_DSN
+        sync: false # Leave blank until you've made the Sentry project.
+      - key: SENTRY_ENVIRONMENT
+        value: production
+
+  # ---------------------------------------------------------------- WEB ----
+  - type: web
+    name: boithok-web
+    runtime: docker
+    # Root context: the build needs index.html (the marketing site at "/"),
+    # which lives outside frontend/.
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: ohio
+    domains:
+      - www.boithokkhana.ca
+      - boithokkhana.ca
+    envVars:
+      # Empty on purpose: the client then calls same-origin "/api/...", which
+      # the Next server proxies to the API below. One hostname, no CORS.
+      - key: NEXT_PUBLIC_API_URL
+        value: ""
+      # Render's private network address for the API service (not public).
+      # Read at runtime by app/api/[...path]/route.ts, which proxies /api/*.
+      - key: BACKEND_ORIGIN
+        fromService:
+          name: boithok-api
+          type: web
+          property: hostport
+      - key: NEXT_PUBLIC_SENTRY_DSN
+        sync: false # NEXT_PUBLIC_* is baked in at build time -> needs a
+        # redeploy after you set it.
+      - key: NEXT_PUBLIC_SENTRY_ENVIRONMENT
+        value: production

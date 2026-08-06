@@ -3,13 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/sync-marketing.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/sync-marketing.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@sentry/nextjs": "^8.55.2",
     "next": "14.2.5",
     "react": "18.3.1",
     "react-dom": "18.3.1"

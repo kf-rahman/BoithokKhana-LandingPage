@@ -14,9 +14,13 @@ from app.api.menus import public_router as menu_public_router
 from app.api.orders import admin_router as orders_admin_router
 from app.api.orders import router as orders_router
 from app.config import settings
+from app.observability import init_error_reporting
 
 
 def create_app() -> FastAPI:
+    # Before anything else, so errors raised during startup are reported too.
+    init_error_reporting()
+
     app = FastAPI(title=settings.app_name)
 
     app.add_middleware(
