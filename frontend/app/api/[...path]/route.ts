@@ -74,7 +74,15 @@ async function proxy(request: NextRequest): Promise<Response> {
       statusText: upstream.statusText,
       headers: responseHeaders,
     });
-  } catch {
+  } catch (error) {
+    // Log the real cause: the customer sees a friendly message, but without
+    // this the server logs show nothing at all and the failure is
+    // undiagnosable. (Learned the hard way during the first deploy.)
+    console.error(
+      `[api-proxy] ${request.method} ${target} failed:`,
+      error instanceof Error ? `${error.name}: ${error.message}` : error,
+      error instanceof Error && error.cause ? `cause: ${String(error.cause)}` : "",
+    );
     // The API is down or unreachable. An order must never look "submitted"
     // when it wasn't, so this is an explicit failure the UI can show.
     return NextResponse.json(
