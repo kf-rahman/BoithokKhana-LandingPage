@@ -14,7 +14,6 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import sqlite
 
 # revision identifiers, used by Alembic.
 revision: str = '81176b5b1dbd'
@@ -86,7 +85,9 @@ def downgrade() -> None:
     op.drop_table('order_items')
 
     with op.batch_alter_table('orders', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('structured_items', sqlite.JSON(), nullable=True))
+        # sa.JSON, not the sqlite dialect's JSON: autogenerate wrote a
+        # SQLite-specific type, but this migration now also runs on Postgres.
+        batch_op.add_column(sa.Column('structured_items', sa.JSON(), nullable=True))
         batch_op.drop_constraint('fk_orders_menu_id_menus', type_='foreignkey')
         batch_op.drop_index(batch_op.f('ix_orders_menu_id'))
         batch_op.drop_column('menu_id')
