@@ -76,8 +76,17 @@ services:
           name: boithok-api
           type: web
           property: hostport
+      # The frontend runs in two places and each needs the DSN under its own
+      # name. Both take the SAME value — the Next.js project's DSN.
+      #   NEXT_PUBLIC_SENTRY_DSN -> errors in the customer's browser
+      #   SENTRY_DSN             -> errors while rendering on the server
+      # Setting only the first would silently miss every server-side crash.
       - key: NEXT_PUBLIC_SENTRY_DSN
         sync: false # NEXT_PUBLIC_* is baked in at build time -> needs a
         # redeploy after you set it.
       - key: NEXT_PUBLIC_SENTRY_ENVIRONMENT
+        value: production
+      - key: SENTRY_DSN
+        sync: false # Same value as NEXT_PUBLIC_SENTRY_DSN above.
+      - key: SENTRY_ENVIRONMENT
         value: production

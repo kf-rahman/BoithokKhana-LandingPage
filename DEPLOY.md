@@ -136,10 +136,20 @@ Sentry's free tier (5k errors/month, no card) is enough for this app.
 1. Create a project at <https://sentry.io> — pick **FastAPI** for the backend
    and **Next.js** for the frontend (two projects, or one, your call).
 2. Copy each DSN from **Settings → Client Keys (DSN)**.
-3. In Render, set the env vars and redeploy:
-   - `boithok-api`: `SENTRY_DSN`
-   - `boithok-web`: `NEXT_PUBLIC_SENTRY_DSN` — this one is inlined at build
-     time, so it needs a **redeploy**, not just a restart.
+3. In Render, set the env vars and redeploy. Note there are **two DSNs but
+   three fields** — the frontend runs both in the browser and on the server,
+   and each reads a differently-named var:
+
+   | Render service | Env var                  | Value                    |
+   |----------------|--------------------------|--------------------------|
+   | `boithok-api`  | `SENTRY_DSN`             | the FastAPI project's DSN |
+   | `boithok-web`  | `NEXT_PUBLIC_SENTRY_DSN` | the Next.js project's DSN |
+   | `boithok-web`  | `SENTRY_DSN`             | the Next.js DSN **again** |
+
+   The last two are the same value. Setting only `NEXT_PUBLIC_SENTRY_DSN`
+   catches browser errors but silently misses every server-side crash.
+   `NEXT_PUBLIC_*` is inlined at build time, so it needs a **redeploy**, not
+   just a restart.
 
 **What is deliberately not sent:** customer order text. `send_default_pii` is
 off, request bodies and cookies are dropped, and `backend/app/observability.py`
