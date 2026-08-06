@@ -12,7 +12,10 @@ databases:
   - name: boithok-db
     databaseName: boithok
     user: boithok
-    plan: basic-256mb # Smallest paid tier. `free` expires after 30 days.
+    # WARNING: Render DELETES a free database 30 days after creation, and the
+    # data goes with it. Fine while testing. Before real customer orders land
+    # here, upgrade this to `basic-256mb` (~$6/mo) in the Render dashboard.
+    plan: free
 
 services:
   # ---------------------------------------------------------------- API ----
@@ -21,8 +24,9 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    plan: starter # Free tier sleeps after 15 min; a sleeping API means a
-    # customer's order fails. Not worth saving $7 on.
+    # Free instances sleep after 15 minutes idle and take ~50s to wake. Good
+    # enough for testing; upgrade to `starter` before customers rely on it.
+    plan: free
     region: ohio
     healthCheckPath: /health
     envVars:
@@ -55,7 +59,7 @@ services:
     # which lives outside frontend/.
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: .
-    plan: starter
+    plan: free
     region: ohio
     domains:
       - www.boithokkhana.ca

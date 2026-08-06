@@ -84,9 +84,19 @@ them for you rather than you clicking through forms.
 5. **Apply**. First build takes ~5–10 minutes. Migrations run automatically on
    the API's start command.
 
-Cost: ~$7/mo per web service + ~$6/mo for the database. The free tier is a
-trap here — free services sleep after 15 minutes, so a customer hitting the
-order page cold would wait ~50 seconds or see a failure.
+### Cost — free to start, but read this
+
+`render.yaml` uses **free** plans, so no card is required. Two limits matter:
+
+- **Free web services sleep after 15 minutes idle** and take ~50 seconds to
+  wake. A customer hitting a cold order page waits, or gives up.
+- **Free Postgres is deleted 30 days after it's created.** The orders in it go
+  with it. Render emails a warning first.
+
+That's fine for testing. **Before Dad relies on this for real orders**, in the
+Render dashboard upgrade `boithok-db` to `basic-256mb` (~$6/mo) and the two
+services to `starter` (~$7/mo each). Custom domains work on free plans, so the
+domain setup below doesn't change.
 
 ### Step 2 — point the domain (GoDaddy)
 
