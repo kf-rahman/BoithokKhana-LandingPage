@@ -65,6 +65,13 @@ and the backend never needs its own subdomain. The proxy is
 rewrite, because rewrites are frozen at build time and the backend's address
 is only known at runtime.
 
+> **On the free plan the proxy uses the API's public URL.** Render's private
+> network won't work here: free web services can send private requests but
+> cannot *receive* them, so `boithok-api:10000` is unreachable and the proxy
+> 502s. Once `boithok-api` is on a paid plan, switch `BACKEND_ORIGIN` back to
+> the private address (commented in `render.yaml`) so API traffic stops
+> crossing the public internet.
+
 `render.yaml` in the repo root declares all three services, so Render creates
 them for you rather than you clicking through forms.
 

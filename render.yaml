@@ -74,13 +74,20 @@ services:
       # the Next server proxies to the API below. One hostname, no CORS.
       - key: NEXT_PUBLIC_API_URL
         value: ""
-      # Render's private network address for the API service (not public).
-      # Read at runtime by app/api/[...path]/route.ts, which proxies /api/*.
+      # Where the /api proxy (app/api/[...path]/route.ts) forwards to.
+      #
+      # This is the API's PUBLIC url, not its private-network address, because
+      # "free web services can send private network requests, but they can't
+      # receive them" (render.com/docs/private-network). A `fromService`
+      # hostport here resolves to boithok-api:10000, which is unreachable
+      # while the API is on the free plan — the proxy just 502s.
+      #
+      # AFTER UPGRADING boithok-api TO A PAID PLAN, switch this back to the
+      # private address to keep the traffic off the public internet:
+      #   - key: BACKEND_ORIGIN
+      #     fromService: {name: boithok-api, type: web, property: hostport}
       - key: BACKEND_ORIGIN
-        fromService:
-          name: boithok-api
-          type: web
-          property: hostport
+        value: https://boithok-api.onrender.com
       # The frontend runs in two places and each needs the DSN under its own
       # name. Both take the SAME value — the Next.js project's DSN.
       #   NEXT_PUBLIC_SENTRY_DSN -> errors in the customer's browser
