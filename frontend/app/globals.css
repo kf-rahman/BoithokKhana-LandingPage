@@ -789,3 +789,16 @@ footer {
 .health-dot.checking { background: #9CA3AF; }
 .health-dot.ok { background: var(--fresh-green); }
 .health-dot.down { background: var(--primary-red); }
+
+/* Admin weekly grid: the "scroll sideways" hint is only true on narrow
+   screens, where the quantities table overflows its box. Hidden on desktop,
+   where the whole table already fits and the hint would just be noise. */
+.grid-scroll-hint {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .grid-scroll-hint {
+        display: block;
+    }
+}

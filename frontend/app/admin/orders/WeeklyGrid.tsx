@@ -16,14 +16,45 @@ export default function WeeklyGrid({
   revenueCents: number;
 }) {
   return (
-    <div className="contact-info-box" style={{ marginBottom: "2rem", overflowX: "auto" }}>
-      <h3 style={{ color: "var(--deep-red)", marginBottom: "1rem" }}>
-        <i className="fas fa-table" /> Week of {menu.week_of} — quantities
-        <span style={{ float: "right", color: "var(--deep-green)" }}>
+    <div className="contact-info-box" style={{ marginBottom: "2rem" }}>
+      {/* Flex + wrap rather than a float: on a phone the floated revenue
+          overlapped the heading text instead of dropping below it. */}
+      <h3
+        style={{
+          color: "var(--deep-red)",
+          marginBottom: "1rem",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "0.5rem",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+        }}
+      >
+        <span>
+          <i className="fas fa-table" /> Week of {menu.week_of} — quantities
+        </span>
+        <span style={{ color: "var(--deep-green)" }}>
           Revenue: {money(revenueCents)}
         </span>
       </h3>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+      {/* The scroller must wrap the table itself. With `width: 100%` the table
+          shrank to the screen and squeezed columns into unreadable slivers
+          instead of scrolling; minWidth forces it to overflow and scroll. */}
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <p
+          className="grid-scroll-hint"
+          style={{ fontSize: "0.8rem", color: "#777", margin: "0 0 0.5rem" }}
+        >
+          Scroll sideways to see every dish.
+        </p>
+        <table
+          style={{
+            width: "100%",
+            minWidth: `${180 + columns.length * 90}px`,
+            borderCollapse: "collapse",
+            fontSize: "0.9rem",
+          }}
+        >
         <thead>
           <tr>
             <th style={gridTh}>Customer</th>
@@ -54,7 +85,8 @@ export default function WeeklyGrid({
             ))}
           </tr>
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 }
