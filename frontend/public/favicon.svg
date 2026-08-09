@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Boithok Khana">
+  <!-- Brand-red rounded tile so the icon stays visible on both light and dark
+       browser chrome. Utensils are cream (#FFFBEB) for maximum contrast at the
+       16px size a favicon is actually rendered at. -->
+  <rect width="64" height="64" rx="14" fill="#991B1B"/>
+  <g fill="#FFFBEB">
+    <!-- Fork: three tines merging into a handle. Shapes are kept chunky on
+         purpose — thin tines disappear when scaled down to 16px. -->
+    <rect x="16" y="12" width="4.5" height="15" rx="2.2"/>
+    <rect x="23.75" y="12" width="4.5" height="15" rx="2.2"/>
+    <rect x="31.5" y="12" width="4.5" height="15" rx="2.2"/>
+    <path d="M14 26h24a4 4 0 0 1-4 4h-6.5v20a3.5 3.5 0 0 1-7 0V30H18a4 4 0 0 1-4-4z"/>
+    <!-- Knife: angled blade over a straight handle. -->
+    <path d="M50 12c3.2 3.6 4.6 8.4 4.6 13.2 0 4.4-1.6 8-4.6 10.2V12z"/>
+    <rect x="47.6" y="33" width="5" height="21" rx="2.5"/>
+  </g>
+</svg>

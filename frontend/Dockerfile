@@ -21,7 +21,15 @@ COPY frontend/ ./
 # The marketing page, one level up — where sync-marketing.mjs expects it.
 COPY index.html /app/index.html
 
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+# Defaults to EMPTY, meaning "call the API on the same origin" — the browser
+# requests /api/... and the route handler proxies it to the backend.
+#
+# This must not default to a localhost URL. NEXT_PUBLIC_* values are compiled
+# into the browser bundle at build time, and hosts like Render supply env vars
+# at RUNTIME, not as build args — so a localhost default silently ships to
+# production and every browser call fails against the visitor's own machine.
+# docker-compose overrides this explicitly for the local stack.
+ARG NEXT_PUBLIC_API_URL=""
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
