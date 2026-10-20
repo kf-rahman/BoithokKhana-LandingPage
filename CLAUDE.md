@@ -1,160 +1,77 @@
-# CLAUDE.md — Family Catering Order System
+# CLAUDE.md — Boithok Khana website
 
-This file is always loaded into context. Keep it concise — detailed domain
-knowledge belongs in `.claude/skills/`, not here.
+This file is always loaded into context. Keep it concise.
 
 ## What this project is
 
-A small CRM/order-management platform replacing a manual WhatsApp + Excel
-workflow for a family-run weekly meal/catering business.
+The website for **Boithok Khana**, a Bengali restaurant and catering business
+at 7 Simcoe St South, Oshawa, ON. It is **one static page**: `index.html`.
 
-**The current (broken) process:**
-1. Dad posts this week's menu on Facebook.
-2. Customers text Dad on WhatsApp with their order, in free-form natural
-   language ("2 chicken biryani no spice, 1 veg thali, deliver friday").
-3. Dad manually retypes every order into an Excel sheet.
-4. Excel is used to plan prep and shopping.
+There is no backend, no database, and no build step. `index.html` contains
+its own CSS and JS and is served as-is. Customers order by WhatsApp
+(+1 437 993-1626), Facebook Messenger, or email
+(bkfoodformulaz@gmail.com) — the site's job is to show the menu and the
+contact details, correctly.
 
-**What we're building instead:**
-1. A public order page where a customer types their order as free text
-   (no rigid dropdowns — the weekly menu changes and items mix and match).
-2. An LLM-backed parser that converts that free text into structured order
-   data (items, quantities, modifiers/notes, customer info, delivery info).
-3. An admin dashboard (Dad-facing) that shows, per order: the **raw
-   original text** the customer typed, and the **parsed/structured version**
-   side by side. Dad can correct a misparse.
-4. CSV export of structured orders for prep/shopping planning.
+> **History:** this repo used to also hold an online order form with a
+> FastAPI backend, Postgres, and LLM order parsing. It was removed in October
+> 2026 — the API had stopped answering and the family was taking orders on
+> WhatsApp anyway. The whole thing is still in git history and on the
+> `workflow-1` / `workflow2` / `workflow3` branches if it's ever wanted back.
 
-This must end up genuinely production-usable by a non-technical user (Dad).
-Not a prototype. Error states, empty states, and "what does Dad do when the
-parser gets it wrong" are first-class concerns, not edge cases.
+## Page structure
 
-## Tech stack
+`index.html` is a single page that shows one `<div class="page">` at a time
+via `showPage(id)`:
 
-- **Frontend:** Next.js (App Router), TypeScript, Tailwind CSS
-- **Backend:** FastAPI (Python)
-- **Database:** PostgreSQL (via SQLAlchemy + Alembic migrations)
-- **Order parsing:** Claude API (Anthropic), called server-side on order
-  submission. See `.claude/skills/order-parsing/SKILL.md` for the prompt
-  contract and output schema.
-- **Local dev:** everything runs on localhost for now. Frontend on
-  `:3000`, backend on `:8000`, Postgres via Docker Compose.
-- **Deployment:** Render, declared by `render.yaml` (Postgres + API + web).
-  Everything is served from one hostname, `www.boithokkhana.ca`: `/` is the
-  marketing site (root `index.html`), plus `/order`, `/admin`, and `/api/*`
-  proxied to the backend by `frontend/app/api/[...path]/route.ts`. One origin
-  means no CORS and no public URL for the API. See `DEPLOY.md`.
-- **Error reporting:** Sentry, inert until `SENTRY_DSN` is set. Customer order
-  text is deliberately scrubbed — see `backend/app/observability.py`.
+| id        | What it is                                                  |
+|-----------|-------------------------------------------------------------|
+| `home`    | hero, services, highlights                                   |
+| `gallery` | photos                                                       |
+| `menu`    | the standing shop menu, in time-of-day tabs                  |
+| `weekly`  | this week's Weekly Meal Menu (rotates; has markers, see below)|
+| `contact` | contact details + subscribe/inquiry forms                    |
 
-## Repository structure
+- The `#menu` tabs (`showMenu(id, btn)`) are `morning`, `luncheon`,
+  `evening`, `dinner`, `breakfast`, `drinks`. A tab needs BOTH a
+  `.menu-tab` button and a `.menu-content` div with the same id.
+- The rotating part of `#weekly` sits between `<!-- WEEKLY-MENU-START -->`
+  and `<!-- WEEKLY-MENU-END -->`.
 
-```
-/frontend          Next.js app
-  /app
-    /order          public order form (customer-facing)
-    /admin           admin dashboard (Dad-facing)
-  /components
-  /lib
-/backend            FastAPI app
-  /app
-    /api             route handlers
-    /models          SQLAlchemy models
-    /schemas         Pydantic schemas
-    /services        business logic (parsing, CSV export, etc.)
-    /db               session/engine setup
-  /alembic            migrations
-  /tests
-/.claude
-  /agents             the 7 subagents
-  /skills             reusable workflows + domain knowledge
-  /hooks              pre-commit safety hook
-/docs
-  /specs              one file per feature, written by spec-writer
-  /stories            one file per feature, written by story-writer
-```
+## Deployment
 
-## Quick start commands
+Render, declared by `render.yaml`: a single Docker web service
+(`boithok-web`) running nginx over `index.html`, serving
+`www.boithokkhana.ca` and `boithokkhana.ca`. Render deploys from the
+`merge-wf1-wf3` branch. Full detail in `DEPLOY.md`.
 
-```
-# backend
-cd backend && uvicorn app.main:app --reload
+Free Render services sleep after 15 idle minutes, so
+`.github/workflows/keep-warm.yml` pings the site every 10 minutes during an
+11-hour daily window. **That window is sized against Render's 750 free
+instance-hours per month, shared across the whole workspace — redo the
+arithmetic in the workflow's comments before widening it.**
 
-# frontend
-cd frontend && npm run dev
+## The agents
 
-# db
-docker compose up -d db
-cd backend && alembic upgrade head
+Three agents maintain this site:
 
-# tests
-cd backend && pytest
-cd frontend && npm test
-```
+- `menu-updater` — the standing shop menu (`#menu`).
+- `weekly-menu-updater` — this week's Weekly Meal Menu (`#weekly`).
+- `site-logistics` — contact details, dead links, stale copy, deploy/uptime.
 
-## Coding standards
+The other agents in `.claude/agents/` (`backend-builder`, `spec-writer`, …)
+and the `build-feature` / `order-parsing` skills are **legacy from the order
+app**. They describe code that no longer exists here. Don't route work to
+them unless the order app is being revived.
 
-- **Backend:** type-hint everything, Pydantic schemas for all
-  request/response bodies, no bare `except:`, business logic lives in
-  `services/` not in route handlers.
-- **Frontend:** Server Components by default; mark Client Components
-  explicitly only when needed (forms, interactivity). No `any` in
-  TypeScript. Co-locate component-specific types with the component.
-- **Craftsmanship mindset:** every line of code should be intentional,
-  readable, and maintainable. Write code you'd be comfortable explaining
-  to a non-technical family member who depends on this working correctly
-  every single week.
-- **Money/quantities:** never use floats for prices. Use integer cents or
-  `Decimal`.
-- **Dates/times:** the business operates in a single timezone. Store as
-  UTC, display in local time. Be explicit about this in any schema
-  involving delivery dates.
+## Rules
 
-## The orchestrated workflow (the "factory")
-
-For any non-trivial feature request, the main session acts as lead
-engineer and delegates to subagents in this order. Full detail in
-`.claude/skills/build-feature/SKILL.md` — invoke it with
-`/build-feature <description>` or just ask in plain language; the skill
-description is written so Claude routes to it automatically for feature
-work.
-
-1. `codebase-researcher` — map what currently exists relevant to the ask.
-2. `story-writer` — turn the idea into a user story with acceptance
-   criteria, written from Dad's or the customer's point of view.
-3. `spec-writer` — turn the story into a technical brief (data model,
-   API contract, UI states, open questions).
-4. `backend-builder` — implement API routes, services, DB models/migrations.
-5. `frontend-builder` — implement components/pages against the spec's
-   API contract.
-6. `test-verifier` — write acceptance tests against the user story.
-7. `implementation-validator` — compare the finished feature against the
-   brief and story; flag any gap before it's considered done.
-
-Do not skip the story/spec steps for anything touching the order-parsing
-logic, the admin dashboard, or anything Dad will rely on operationally —
-those are exactly the places where ambiguity becomes a real-world mistake
-(wrong order prepared, missed delivery).
-
-## Non-negotiables specific to this project
-
-- The customer's **original raw text is never discarded or overwritten**.
-  It is stored permanently alongside the structured parse. This is the
-  fallback of last resort when parsing is wrong.
-- The parser must never silently invent items that weren't in the
-  customer's text. If it's not confident, it should flag the order for
-  manual review rather than guess.
-- Admin dashboard changes must be reviewed especially carefully — Dad is
-  not a developer and will not debug a confusing UI. Favor obvious over
-  clever.
-- Admin auth is a **v1 shared PIN** (`X-Admin-Pin` header, value from the
-  `ADMIN_PIN` env var). This was the product owner's decision — not a real
-  login. Revisit if multiple staff or stronger auth become necessary.
-
-## PR review checklist
-
-See `docs/pr-checklist.md`. Every AI-generated PR must be checked against
-it before merge — no exceptions, including PRs that only touch tests or
-docs.
-This branch (`merge-wf1-wf3`) is the integrated app: the workflow-1 base with
-workflow-3's component-split admin dashboard ported onto it.
+- **Never invent a dish, a price, hours, or a contact detail.** This is a
+  real family business; a wrong price on the live menu costs them money, and
+  a wrong phone number costs them an order. If a source is unreadable, leave
+  the old value and say so.
+- Keep the Bangla alongside the English in menu headings and dish names where
+  the source has it — that's how customers recognise the dishes.
+- Prices are written as printed, with two decimals and a `$`.
+- Editing `index.html` *is* shipping, once pushed. Check the tags still
+  balance before you commit.

@@ -1,6 +1,6 @@
 ---
 name: weekly-menu-updater
-description: Publishes the week's Weekly Meal Menu — the rotating mains/sides/chef's special for the meal-service week. Updates the Weekly Meal page on the marketing site and, when the order app is in use, the published menu the order parser validates against. Use whenever a new week's menu photo or item list arrives. NOT for the standing shop menu — that's menu-updater.
+description: Publishes the week's Weekly Meal Menu on the site — the rotating mains, sides and chef's special for the meal-service week, plus the week's date. Use whenever a new week's menu photo or item list arrives. NOT for the standing shop menu — that's menu-updater.
 tools: Read, Write, Edit, Grep, Glob, Bash
 model: sonnet
 ---
@@ -10,8 +10,6 @@ a deadline attached to it, and customers order against it — so being wrong
 here means the wrong food gets cooked.
 
 ## Where it lives
-
-### 1. The marketing site (always update this)
 
 `index.html`, inside `<div id="weekly" class="page">`. Everything that rotates
 sits between these two markers:
@@ -49,20 +47,6 @@ note line rather than leaving asterisks on the page:
 Chef's Special items DO carry a price (`<span class="price">$15.00</span>`);
 the regular mains and sides do not — they're priced by package.
 
-### 2. The order app's published menu (only if the order app is live)
-
-The order parser validates a customer's free text against the active published
-menu, so a stale menu there means valid orders get flagged. The menu is
-`Menu` + `MenuItem` in `backend/app/models/menu.py`, created and published via:
-
-- `POST /api/admin/menus` with `{week_of, items: [{name, price_cents}]}`
-- `POST /api/admin/menus/{id}/publish`
-
-Both need the `X-Admin-Pin` header (`ADMIN_PIN`). Prices are **integer cents**,
-never floats. `week_of` is the Monday of the menu's week, a plain date.
-Check with the main session before calling a production endpoint — if the
-order app isn't being used this week, updating `index.html` is the whole job.
-
 ## Rules
 
 - **Never invent an item or a price.** Transcribe what the source says. If a
@@ -74,8 +58,9 @@ order app isn't being used this week, updating `index.html` is the whole job.
   6:00 PM, delivery the following Saturday or Sunday"). If the source changes
   the deadline, change the banner too.
 - Don't touch the standing shop menu (`<div id="menu">`) or contact details.
+- There is no database or order app behind this page — `index.html` is the
+  whole publication step. Editing it and pushing is the job.
 - Verify tags still balance after editing, and confirm the markers are still
   present and in order.
 - Report back: the week you published, the full main/side/special lists as
-  they now read on the page, whether you touched the order app's menu, and
-  anything you couldn't read from the source.
+  they now read on the page, and anything you couldn't read from the source.

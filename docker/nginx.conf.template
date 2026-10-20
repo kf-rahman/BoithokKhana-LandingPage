@@ -1,0 +1,27 @@
+# envsubst fills in ${PORT} at container start (see Dockerfile).
+server {
+    listen ${PORT};
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # /health so uptime checks (scripts/keep-warm.sh, Render's health check)
+    # have something cheap to hit that isn't the full page.
+    location = /health {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 'ok';
+    }
+
+    # The site is a single page that switches sections in JS, so any path
+    # that doesn't match a file falls back to it rather than 404ing. This
+    # also keeps old /order and /admin links working — they land on the home
+    # page instead of a dead end.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    gzip on;
+    gzip_types text/plain text/css application/javascript image/svg+xml;
+}

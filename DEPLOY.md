@@ -1,171 +1,93 @@
-# Deploying Boithok Khana (order app)
+# Deploying the Boithok Khana site
 
-The app is two deployable pieces plus a database:
+The site is one static page, `index.html`, served by nginx in a small Docker
+image. There is no backend and no database.
 
-- **Frontend** — Next.js (`frontend/`). Static-ish Node server; deploys to
-  Vercel or any Node host, or the provided `frontend/Dockerfile`.
-- **Backend** — FastAPI (`backend/`). Containerised via `backend/Dockerfile`;
-  applies Alembic migrations on start.
-- **Database** — PostgreSQL in production (SQLite locally, no setup).
+> **What changed (October 2026):** this used to be three services — a Next.js
+> frontend, a FastAPI backend, and a Postgres database, serving an online
+> order form with LLM order parsing. The order app was removed; orders come
+> in on WhatsApp and Messenger. The old blueprint and code are in git history
+> and on the `workflow-1` / `workflow2` / `workflow3` branches.
 
-> This is the order app, separate from the marketing site (`index.html`, served
-> via GitHub Pages / `CNAME`). The order app can't run on GitHub Pages — it
-> needs a Python backend + a database.
+## Looking at it locally
 
-## 1. Local dev (fastest, no Docker)
-
-```bash
-# backend — SQLite, no key needed (orders save as pending_parse)
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head        # or it auto-creates tables on first boot
-python seed.py              # a sample published menu for testing
-uvicorn app.main:app --reload   # http://localhost:8000
-
-# frontend (separate shell)
-cd frontend
-npm install
-npm run dev                 # http://localhost:3000
-```
-
-Admin dashboard: http://localhost:3000/admin → enter the PIN (`ADMIN_PIN`,
-default `1234`).
-
-## 2. Full stack locally (Docker Compose)
-
-Brings up Postgres + API (:8000) + web (:3000) together:
+No toolchain needed — open `index.html` in a browser, or:
 
 ```bash
-cp env.example .env         # then edit: ADMIN_PIN, ANTHROPIC_API_KEY, ...
-docker compose up --build
+python3 -m http.server 8080      # then http://localhost:8080
 ```
 
-`NEXT_PUBLIC_API_URL` defaults to `http://localhost:8000` (the browser reaches
-the API on the host's published port). Seed a menu once the stack is up:
+To check the real production image (needs Docker running):
 
 ```bash
-docker compose exec backend python seed.py
+docker build -t bk-site .
+docker run --rm -p 8080:10000 -e PORT=10000 bk-site
+curl -s localhost:8080/health    # -> ok
 ```
 
-## 3. Production — Render, one domain
+## Production — Render
 
-Everything lives on **one hostname**, `www.boithokkhana.ca`:
+`render.yaml` declares one service:
 
-| Path        | Served by                                                  |
-|-------------|------------------------------------------------------------|
-| `/`         | the marketing site (root `index.html`)                     |
-| `/order`    | the customer order form                                    |
-| `/admin`    | Dad's dashboard                                            |
-| `/api/*`    | proxied to the FastAPI backend (private, no public URL)    |
+| Service       | What it does                                              |
+|---------------|-----------------------------------------------------------|
+| `boithok-web` | nginx serving `index.html` on `www.boithokkhana.ca`        |
 
-The browser only ever talks to one origin, so **there is no CORS involved**
-and the backend never needs its own subdomain. The proxy is
-`frontend/app/api/[...path]/route.ts` — a route handler, not a `next.config`
-rewrite, because rewrites are frozen at build time and the backend's address
-is only known at runtime.
+Render builds from the **`merge-wf1-wf3`** branch — push to it and Render
+redeploys automatically. A failed build does **not** take the site down;
+Render keeps serving the last good deploy until a new one builds and passes
+its health check (`GET /health`).
 
-> **On the free plan the proxy uses the API's public URL.** Render's private
-> network won't work here: free web services can send private requests but
-> cannot *receive* them, so `boithok-api:10000` is unreachable and the proxy
-> 502s. Once `boithok-api` is on a paid plan, switch `BACKEND_ORIGIN` back to
-> the private address (commented in `render.yaml`) so API traffic stops
-> crossing the public internet.
+Everything resolves to one hostname. Unknown paths fall back to `index.html`
+(see `docker/nginx.conf.template`), so old `/order` and `/admin` links land
+on the home page rather than 404ing.
 
-`render.yaml` in the repo root declares all three services, so Render creates
-them for you rather than you clicking through forms.
+### One-time cleanup still owed
 
-### Step 1 — deploy the services
+Removing services from a blueprint does not delete them on Render. The old
+`boithok-api` and `boithok-db` are still sitting in the dashboard — **delete
+them by hand**, otherwise the free database keeps counting down its 30-day
+deletion clock and the API keeps eating free instance hours whenever
+something wakes it.
 
-1. Push this branch to GitHub.
-2. Go to <https://dashboard.render.com> → **New** → **Blueprint**.
-3. Connect the `kf-rahman/BoithokKhana-LandingPage` repo and pick this branch.
-4. Render reads `render.yaml` and shows three resources: `boithok-db`,
-   `boithok-api`, `boithok-web`. It will prompt for the secrets marked
-   `sync: false`:
-   - `ADMIN_PIN` — **change it from 1234.** This is the only thing standing
-     between the public and every customer's order.
-   - `ANTHROPIC_API_KEY` — order parsing stays off without it (orders still
-     save as `pending_parse`, nothing is lost).
-   - `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` — leave blank for now, see §4.
-5. **Apply**. First build takes ~5–10 minutes. Migrations run automatically on
-   the API's start command.
+### DNS
 
-### Cost — free to start, but read this
+Unchanged: GoDaddy points `www` and the apex at the Render service. Moving
+hosts means re-pointing those records and re-adding the custom domains in
+Render.
 
-`render.yaml` uses **free** plans, so no card is required. Two limits matter:
+## Keeping it awake
 
-- **Free web services sleep after 15 minutes idle** and take ~50 seconds to
-  wake. A customer hitting a cold order page waits, or gives up.
-- **Free Postgres is deleted 30 days after it's created.** The orders in it go
-  with it. Render emails a warning first.
+Free Render services spin down after 15 minutes without traffic and take
+about a minute to wake, which is why a first visitor sometimes saw Render's
+loading screen.
 
-That's fine for testing. **Before Dad relies on this for real orders**, in the
-Render dashboard upgrade `boithok-db` to `basic-256mb` (~$6/mo) and the two
-services to `starter` (~$7/mo each). Custom domains work on free plans, so the
-domain setup below doesn't change.
+`.github/workflows/keep-warm.yml` runs `scripts/keep-warm.sh` every 10
+minutes between 15:00 and 01:59 UTC (roughly 11am–10pm in Toronto). Outside
+that window the site sleeps on purpose.
 
-### Step 2 — point the domain (GoDaddy)
+**The window is a budget, not a preference.** A Render workspace gets 750
+free instance-hours per calendar month, shared across every free service in
+it. 11 hours/day × 31 days = 341 hours. Go to 24/7 and it's 744 — one wobble
+over the line and Render suspends the service until the next month. Redo the
+arithmetic before widening the cron.
 
-In Render, open **boithok-web → Settings → Custom Domains**. It shows the
-exact values to use. Then in GoDaddy → **My Products → boithokkhana.ca →
-DNS → Manage DNS**:
+The scheduled workflow only runs from the repository's **default branch**
+(`main`), so keep `main` up to date with the deploy branch.
 
-| Type    | Name  | Value                            | Notes                        |
-|---------|-------|----------------------------------|------------------------------|
-| `CNAME` | `www` | `boithok-web.onrender.com`       | exact value from Render      |
-| `A`     | `@`   | Render's apex IP (shown in UI)   | makes the bare domain work   |
-
-Delete any existing `www` record pointing at GitHub Pages first — that's what
-currently serves the old site, and both can't win.
-
-DNS takes 10–60 minutes. Render issues the HTTPS certificate automatically
-once it resolves; until then you'll see a certificate warning, which is
-expected and self-resolving.
-
-> The old GitHub Pages site keeps working until you change that `www` record.
-> That is the actual cutover moment — everything before it is reversible.
-
-### Step 3 — first run
-
-1. Visit `https://www.boithokkhana.ca` — the marketing site.
-2. Go to `/admin` → enter the PIN → **publish the first weekly menu**. Until
-   a menu is published, `/order` has nothing to show.
-3. Place a test order through `/order`, then confirm it appears in `/admin`
-   with the raw text intact.
-
-## 4. Error reporting (Sentry)
-
-Wired in and **inert until you set a DSN** — safe to deploy as-is.
-
-Sentry's free tier (5k errors/month, no card) is enough for this app.
-
-1. Create a project at <https://sentry.io> — pick **FastAPI** for the backend
-   and **Next.js** for the frontend (two projects, or one, your call).
-2. Copy each DSN from **Settings → Client Keys (DSN)**.
-3. In Render, set the env vars and redeploy. Note there are **two DSNs but
-   three fields** — the frontend runs both in the browser and on the server,
-   and each reads a differently-named var:
-
-   | Render service | Env var                  | Value                    |
-   |----------------|--------------------------|--------------------------|
-   | `boithok-api`  | `SENTRY_DSN`             | the FastAPI project's DSN |
-   | `boithok-web`  | `NEXT_PUBLIC_SENTRY_DSN` | the Next.js project's DSN |
-   | `boithok-web`  | `SENTRY_DSN`             | the Next.js DSN **again** |
-
-   The last two are the same value. Setting only `NEXT_PUBLIC_SENTRY_DSN`
-   catches browser errors but silently misses every server-side crash.
-   `NEXT_PUBLIC_*` is inlined at build time, so it needs a **redeploy**, not
-   just a restart.
-
-**What is deliberately not sent:** customer order text. `send_default_pii` is
-off, request bodies and cookies are dropped, and `backend/app/observability.py`
-redacts `raw_text`, names, phones, emails and delivery notes from stack
-frames. Session replay is disabled for the same reason. You get the stack
-trace, not the customer's personal information.
-
-Local test that reporting works:
+Run it by hand any time:
 
 ```bash
-cd backend && SENTRY_DSN='<dsn>' uvicorn app.main:app
+scripts/keep-warm.sh
 ```
+
+A non-zero exit means the site is genuinely unreachable — every target is
+retried three times through a full cold start before it fails.
+
+### The permanent fix
+
+Either upgrade `boithok-web` to Render's `starter` plan, or move the site to
+a Render **static site** (free, never sleeps — it would need a new service
+and the custom domains moved onto it in the dashboard). Either way,
+`.github/workflows/keep-warm.yml` and `scripts/keep-warm.sh` can then be
+deleted.
