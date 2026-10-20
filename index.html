@@ -766,6 +766,7 @@
                 <li><a href="#" onclick="showPage('home')" class="nav-link">Home</a></li>
                 <li><a href="#" onclick="showPage('gallery')" class="nav-link">Gallery</a></li>
                 <li><a href="#" onclick="showPage('menu')" class="nav-link">Menu & Updates</a></li>
+                <li><a href="#" onclick="showPage('weekly')" class="nav-link">Weekly Meal</a></li>
                 <li><a href="#" onclick="showPage('contact')" class="nav-link">Subscribe & Contact</a></li>
                 <li><a href="/order" class="nav-link">Order Now</a></li>
             </ul>
@@ -888,147 +889,474 @@
                 <h2 class="section-title">Our Menu & Latest Updates</h2>
                 
                 <div class="notification-banner">
-                    <i class="fas fa-bell" style="font-size: 1.5rem;"></i>
+                    <i class="fas fa-utensils" style="font-size: 1.5rem;"></i>
                     <div>
-                        <strong>Special Offer!</strong> Free dessert platter with every wedding catering booking this month!
-                        <span style="opacity: 0.9; font-size: 0.9rem;">(Valid until April 30th)</span>
+                        <strong>The menu follows the time of day.</strong> Pick whatever you like, whenever you like —
+                        morning, lunch, evening or dinner.
                     </div>
                 </div>
 
                 <div class="notification-banner" style="background: linear-gradient(90deg, var(--golden-yellow) 0%, var(--bright-orange) 100%); color: var(--dark); animation: none;">
                     <i class="fas fa-calendar-alt" style="font-size: 1.5rem;"></i>
                     <div>
-                        <strong>New!</strong> Spring Menu now available featuring fresh asparagus dishes and strawberry desserts!
+                        <strong>Also ask us about:</strong> Weekend Breakfast, Programme Catering, and our Weekly Meal Service.
                     </div>
                 </div>
 
                 <div class="menu-tabs">
-                    <button class="menu-tab active" onclick="showMenu('appetizers', this)">Appetizers</button>
-                    <button class="menu-tab" onclick="showMenu('mains', this)">Main Courses</button>
-                    <button class="menu-tab" onclick="showMenu('desserts', this)">Desserts</button>
-                    <button class="menu-tab" onclick="showMenu('packages', this)">Event Packages</button>
+                    <button class="menu-tab active" onclick="showMenu('morning', this)">Morning &mdash; সকালে</button>
+                    <button class="menu-tab" onclick="showMenu('luncheon', this)">Luncheon &mdash; দুপুরে</button>
+                    <button class="menu-tab" onclick="showMenu('evening', this)">Bonne soirée &mdash; বিকাল সন্ধ্যা</button>
+                    <button class="menu-tab" onclick="showMenu('dinner', this)">Bon Diner &mdash; রাতের বেলা</button>
+                    <button class="menu-tab" onclick="showMenu('breakfast', this)">Weekend Breakfast &mdash; ছুটির আয়েশী নাস্তা</button>
+                    <button class="menu-tab" onclick="showMenu('drinks', this)">Drinks</button>
                 </div>
 
-                <div id="appetizers" class="menu-content active">
+                <div id="morning" class="menu-content active">
                     <div class="menu-grid">
                         <div class="menu-item">
                             <div class="menu-item-header">
-                                <h3>Samosa Trio</h3>
-                                <span class="price">$8</span>
+                                <h3>Chicken Samosa</h3>
+                                <span class="price">$2.00</span>
                             </div>
-                            <p>Crispy pastries filled with spiced potatoes, peas, and lentils</p>
-                            <span class="badge badge-veg"><i class="fas fa-leaf"></i> Vegetarian</span>
-                            <span class="badge badge-new">NEW</span>
                         </div>
                         <div class="menu-item">
                             <div class="menu-item-header">
-                                <h3>Spicy Chicken Wings</h3>
-                                <span class="price">$12</span>
+                                <h3>Vegetable Shingara</h3>
+                                <span class="price">$1.00</span>
                             </div>
-                            <p>Tandoori marinated wings with mint chutney</p>
-                            <span class="badge badge-spicy"><i class="fas fa-pepper-hot"></i> Spicy</span>
-                        </div>
-                        <div class="menu-item">
-                            <div class="menu-item-header">
-                                <h3>Vegetable Pakora</h3>
-                                <span class="price">$7</span>
-                            </div>
-                            <p>Mixed vegetables in chickpea batter, deep fried to perfection</p>
-                            <span class="badge badge-veg"><i class="fas fa-leaf"></i> Vegetarian</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="mains" class="menu-content">
-                    <div class="menu-grid">
-                        <div class="menu-item">
-                            <div class="menu-item-header">
-                                <h3>Butter Chicken</h3>
-                                <span class="price">$18</span>
-                            </div>
-                            <p>Creamy tomato curry with tender chicken pieces</p>
-                            <span class="badge badge-new">Chef's Choice</span>
-                        </div>
-                        <div class="menu-item">
-                            <div class="menu-item-header">
-                                <h3>Lamb Rogan Josh</h3>
-                                <span class="price">$22</span>
-                            </div>
-                            <p>Aromatic Kashmiri curry with tender lamb chunks</p>
-                            <span class="badge badge-spicy"><i class="fas fa-pepper-hot"></i> Medium Spicy</span>
-                        </div>
-                        <div class="menu-item">
-                            <div class="menu-item-header">
-                                <h3>Paneer Tikka Masala</h3>
-                                <span class="price">$16</span>
-                            </div>
-                            <p>Grilled cottage cheese in rich tomato gravy</p>
                             <span class="badge badge-veg"><i class="fas fa-leaf"></i> Vegetarian</span>
                         </div>
                         <div class="menu-item">
                             <div class="menu-item-header">
-                                <h3>Seafood Biryani</h3>
-                                <span class="price">$24</span>
+                                <h3>Beef Kolija Shingara</h3>
+                                <span class="price">$2.00</span>
                             </div>
-                            <p>Saffron rice with shrimp, fish, and exotic spices</p>
-                            <span class="badge badge-new">Popular</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Spring Roll</h3>
+                                <span class="price">$1.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Tea</h3>
+                                <span class="price">$2.50</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Coffee</h3>
+                                <span class="price">$2.00</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="desserts" class="menu-content">
+                <div id="luncheon" class="menu-content">
                     <div class="menu-grid">
                         <div class="menu-item">
                             <div class="menu-item-header">
-                                <h3>Gulab Jamun</h3>
-                                <span class="price">$6</span>
+                                <h3>Butter Chicken Rice</h3>
+                                <span class="price">$11.99</span>
                             </div>
-                            <p>Warm milk dumplings soaked in rose-scented syrup</p>
+                            <p>Lunch takeout price</p>
                         </div>
                         <div class="menu-item">
                             <div class="menu-item-header">
-                                <h3>Mango Kulfi</h3>
-                                <span class="price">$5</span>
+                                <h3>Fried Rice with Chicken</h3>
+                                <span class="price">$11.99</span>
                             </div>
-                            <p>Traditional Indian ice cream with fresh mango pulp</p>
-                            <span class="badge badge-new">Seasonal</span>
+                            <p>Lunch takeout price</p>
                         </div>
                         <div class="menu-item">
                             <div class="menu-item-header">
-                                <h3>Rasmalai</h3>
-                                <span class="price">$7</span>
+                                <h3>Tuna Sandwich with Fries</h3>
+                                <span class="price">$11.99</span>
                             </div>
-                            <p>Soft cheese patties in cardamom-flavored milk</p>
+                            <p>Lunch takeout price</p>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Beef Tehari</h3>
+                                <span class="price">$12.99</span>
+                            </div>
+                            <p>Lunch takeout price</p>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Chicken Biriyani</h3>
+                                <span class="price">$11.99</span>
+                            </div>
+                            <p>Lunch takeout price</p>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Momo</h3>
+                                <span class="price">$9.00</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="packages" class="menu-content">
+                <div id="evening" class="menu-content">
                     <div class="menu-grid">
-                        <div class="menu-item" style="border-left-color: var(--fresh-green);">
+                        <div class="menu-item">
                             <div class="menu-item-header">
-                                <h3>Corporate Lunch Package</h3>
-                                <span class="price" style="color: var(--deep-green);">$25/person</span>
+                                <h3>Piaju</h3>
+                                <span class="price">$0.75</span>
                             </div>
-                            <p>Includes 2 appetizers, 3 main courses, rice, bread, and dessert. Perfect for office meetings and seminars.</p>
-                            <span class="badge badge-veg">Customizable</span>
                         </div>
-                        <div class="menu-item" style="border-left-color: var(--primary-red);">
+                        <div class="menu-item">
                             <div class="menu-item-header">
-                                <h3>Wedding Feast Package</h3>
-                                <span class="price">$45/person</span>
+                                <h3>Chola Muri</h3>
+                                <span class="price">$5.99</span>
                             </div>
-                            <p>Grand buffet setup with 5 appetizers, 6 main courses, live station, and dessert bar. Includes service staff.</p>
-                            <span class="badge badge-new">15% OFF this month!</span>
                         </div>
-                        <div class="menu-item" style="border-left-color: var(--golden-yellow);">
+                        <div class="menu-item">
                             <div class="menu-item-header">
-                                <h3>Birthday Party Pack</h3>
-                                <span class="price">$20/person</span>
+                                <h3>Chotpoti</h3>
+                                <span class="price">$6.00</span>
                             </div>
-                            <p>Kid-friendly options with mild spices, pizza options, and fun dessert platters. Minimum 20 guests.</p>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Fuchka</h3>
+                                <span class="price">$5.99</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Jilapi</h3>
+                                <span class="price">$1.00</span>
+                            </div>
+                            <p>Per piece</p>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Daal Puri</h3>
+                                <span class="price">$2.00</span>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                <div id="dinner" class="menu-content">
+                    <div class="menu-grid">
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Polao Chicken Roast</h3>
+                                <span class="price">$15.99</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Morog Polao</h3>
+                                <span class="price">$16.99</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Beef Tehari</h3>
+                                <span class="price">$15.99</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Khichuri with Beef</h3>
+                                <span class="price">$15.99</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Sweets</h3>
+                                <span class="price">$1.50</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Desserts</h3>
+                                <span class="price">$3.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="breakfast" class="menu-content">
+                    <div class="menu-grid">
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Parata &mdash; পরোটা</h3>
+                                <span class="price">$3.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Ruti &mdash; রুটি</h3>
+                                <span class="price">$1.50</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Rice Ruti &mdash; চালের রুটি</h3>
+                                <span class="price">$2.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Egg &mdash; ডিম ভাজি</h3>
+                                <span class="price">$2.50</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Shujir Halua &mdash; সুজির হালুয়া</h3>
+                                <span class="price">$2.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Mix Vegetable &mdash; সবজী</h3>
+                                <span class="price">$2.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Chicken Soup &mdash; চিকেন স্যুপ</h3>
+                                <span class="price">$6.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Beef Booter Daal &mdash; বুটের ডাল দিয়ে গরুর মাংস</h3>
+                                <span class="price">$8.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Chicken Gila Kolija &mdash; মুরগির গিলা কলিজা</h3>
+                                <span class="price">$6.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Bhuna Khichuri &mdash; ভুনা খিচুড়ী</h3>
+                                <span class="price">$11.99</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Chicken Combo</h3>
+                                <span class="price">$17.00</span>
+                            </div>
+                            <p>Weekend Breakfast Combo &mdash; আয়েশী সকাল</p>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Beef Combo</h3>
+                                <span class="price">$18.00</span>
+                            </div>
+                            <p>Weekend Breakfast Combo &mdash; আয়েশী সকাল</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="drinks" class="menu-content">
+                    <div class="menu-grid">
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Water Bottle</h3>
+                                <span class="price">$1.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Pops / Soft Drinks</h3>
+                                <span class="price">$2.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Tea (Small)</h3>
+                                <span class="price">$1.00</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Tea (Not so Small)</h3>
+                                <span class="price">$2.50</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Coffee</h3>
+                                <span class="price">$2.50</span>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-header">
+                                <h3>Juice</h3>
+                                <span class="price">$1.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="margin-top: 2rem; text-align: center; color: #666; font-size: 0.95rem;">
+                    Prices in CAD. Lunch items are priced for takeout. Weekend Breakfast is served Saturday and Sunday.
+                </p>
+
+                <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--light-gray); border-radius: 10px; border-left: 4px solid var(--primary-red); text-align: center;">
+                    <h3 style="color: var(--deep-red); margin-bottom: 0.75rem;">We also serve</h3>
+                    <p style="margin-bottom: 0.4rem;"><strong>Weekly Meal Service</strong> &mdash; <a href="/order" style="color: var(--deep-red);">order here</a></p>
+                    <p style="margin-bottom: 0.4rem;"><strong>Party Catering</strong> &mdash; call the shop</p>
+                    <p style="margin-bottom: 0;"><strong>Daily Tiffin Service</strong> &mdash; call the shop</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Weekly Meal Menu Page -->
+    <!--
+      THIS SECTION CHANGES EVERY WEEK. Everything that needs editing lives
+      between the WEEKLY-MENU-START / WEEKLY-MENU-END markers below: the week
+      date in the heading, the Main/Protein list, the Side/Vegetable list and
+      the Chef's Special. Prices, delivery rules and the ordering deadline
+      sit outside those markers because they rarely change.
+    -->
+    <div id="weekly" class="page">
+        <section class="menu-section">
+            <div class="container">
+                <!-- WEEKLY-MENU-START -->
+                <h2 class="section-title">Weekly Meal Menu &mdash; October 24th, 2026</h2>
+
+                <div class="notification-banner">
+                    <i class="fas fa-clock" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Order by Wednesday 6:00 PM.</strong> Delivery on the following Saturday or Sunday.
+                    </div>
+                </div>
+
+                <h3 style="color: var(--deep-red); margin: 2rem 0 1rem; font-size: 1.5rem;">Main / Protein Items</h3>
+                <div class="menu-grid">
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Chicken Kosha</h3></div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Butter Chicken</h3></div>
+                        <p>Additional $3 for this item</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Beef Jhol Potato</h3></div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Telapia Bhuna</h3></div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Alu Motor Beef Keema</h3></div>
+                        <p>Comes in a 16 oz container</p>
+                    </div>
+                </div>
+
+                <h3 style="color: var(--deep-red); margin: 2rem 0 1rem; font-size: 1.5rem;">Side / Vegetable Items</h3>
+                <div class="menu-grid">
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Lau Chingri</h3></div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Phulkopi Alu Bhaji</h3></div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Begun Bhorta</h3></div>
+                        <p>Comes in an 8 oz container</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Mishti Kumra Bhorta</h3></div>
+                        <p>Comes in an 8 oz container</p>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Plain Daal</h3></div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-header"><h3>Rice / Polao / Khichuri</h3></div>
+                    </div>
+                </div>
+
+                <h3 style="color: var(--deep-red); margin: 2rem 0 1rem; font-size: 1.5rem;">Chef's Special</h3>
+                <div class="menu-grid">
+                    <div class="menu-item" style="border-left-color: var(--golden-yellow);">
+                        <div class="menu-item-header">
+                            <h3>Basa Lemon Leaf Curry</h3>
+                            <span class="price">$15.00</span>
+                        </div>
+                    </div>
+                    <div class="menu-item" style="border-left-color: var(--golden-yellow);">
+                        <div class="menu-item-header">
+                            <h3>Beef Shami Kabab (4)</h3>
+                            <span class="price">$12.00</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- WEEKLY-MENU-END -->
+
+                <h3 style="color: var(--deep-red); margin: 2rem 0 1rem; font-size: 1.5rem;">Weekly Meal Price</h3>
+                <div class="menu-grid">
+                    <div class="menu-item" style="border-left-color: var(--fresh-green);">
+                        <div class="menu-item-header">
+                            <h3>Six (6) items</h3>
+                            <span class="price" style="color: var(--deep-green);">$80</span>
+                        </div>
+                        <p>4 mains + 2 sides</p>
+                    </div>
+                    <div class="menu-item" style="border-left-color: var(--fresh-green);">
+                        <div class="menu-item-header">
+                            <h3>Five (5) items</h3>
+                            <span class="price" style="color: var(--deep-green);">$70</span>
+                        </div>
+                        <p>3 mains + 2 sides</p>
+                    </div>
+                    <div class="menu-item" style="border-left-color: var(--fresh-green);">
+                        <div class="menu-item-header">
+                            <h3>Three (3) items</h3>
+                            <span class="price" style="color: var(--deep-green);">$50</span>
+                        </div>
+                        <p>2 mains + 1 side</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                    <div style="padding: 1.5rem; background: var(--light-gray); border-radius: 10px; border-left: 4px solid var(--primary-red);">
+                        <h4 style="color: var(--deep-red); margin-bottom: 0.75rem;"><i class="fas fa-plus-circle"></i> Additional orders (with a Weekly Meal)</h4>
+                        <p style="font-size: 0.95rem; color: #555; line-height: 1.8;">
+                            Regular listed item &mdash; $12 each<br>
+                            Special item replacing a regular item &mdash; add $10 each<br>
+                            Special items added to a weekly meal &mdash; as per item price
+                        </p>
+                    </div>
+                    <div style="padding: 1.5rem; background: var(--light-gray); border-radius: 10px; border-left: 4px solid var(--primary-red);">
+                        <h4 style="color: var(--deep-red); margin-bottom: 0.75rem;"><i class="fas fa-truck"></i> Delivery</h4>
+                        <p style="font-size: 0.95rem; color: #555; line-height: 1.8;">
+                            Free delivery on the 3-item package in Durham Region and Toronto City
+                            (Toronto adds $5 to the $50 package).<br>
+                            Reasonable delivery charge on packages of 5 or more items within Toronto,
+                            Durham Region and vicinity.<br>
+                            <small>We deliver from our Oshawa base on Harmony Rd.</small>
+                        </p>
+                    </div>
+                    <div style="padding: 1.5rem; background: var(--light-gray); border-radius: 10px; border-left: 4px solid var(--primary-red);">
+                        <h4 style="color: var(--deep-red); margin-bottom: 0.75rem;"><i class="fas fa-paper-plane"></i> How to order</h4>
+                        <p style="font-size: 0.95rem; color: #555; line-height: 1.8;">
+                            <a href="/order" style="color: var(--deep-red); font-weight: 600;">Order online here</a> &mdash;
+                            or WhatsApp <a href="https://wa.me/14379931626" style="color: var(--deep-red);">+1 (437) 993-1626</a> (Kazi),
+                            Facebook Messenger, or email
+                            <a href="mailto:bkfoodformulaz@gmail.com" style="color: var(--deep-red);">bkfoodformulaz@gmail.com</a>.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2.5rem;">
+                    <a href="/order" class="btn btn-primary">Order this week's meal <i class="fas fa-arrow-right"></i></a>
                 </div>
             </div>
         </section>
@@ -1101,7 +1429,7 @@
                             </div>
                             <div>
                                 <h4>Email</h4>
-                                <p><a href="mailto:info@boithokkhana.ca" style="color: inherit; text-decoration: none;">info@boithokkhana.ca</a><br>
+                                <p><a href="mailto:bkfoodformulaz@gmail.com" style="color: inherit; text-decoration: none;">bkfoodformulaz@gmail.com</a><br>
                                 <small style="color: #666;">We reply within 24 hours</small></p>
                             </div>
                         </div>
@@ -1112,7 +1440,8 @@
                             </div>
                             <div>
                                 <h4>Location</h4>
-                                <p>Oshawa, ON<br>
+                                <p>7 Simcoe St South<br>
+                                Oshawa, ON, Canada<br>
                                 <small style="color: var(--fresh-green);"><i class="fas fa-truck"></i> We deliver within 50 miles</small></p>
                             </div>
                         </div>
@@ -1146,7 +1475,7 @@
                 <h3>Boithok Khana</h3>
                 <p>Bringing authentic flavors coupled with professional service to you since 2022.</p>
                 <div class="social-links">
-                    <a href="#" onclick="alert('Facebook page coming soon!'); return false;" title="Facebook">
+                    <a href="https://www.facebook.com/BoithokKhanaTO" target="_blank" rel="noopener" title="Facebook">
                         <i class="fab fa-facebook-f"></i>
                     </a>
                     <a href="#" onclick="alert('Instagram page coming soon!'); return false;" title="Instagram" style="background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);">
@@ -1161,8 +1490,8 @@
             <div class="footer-section">
                 <h3>Contact Info</h3>
                 <p style="margin-bottom: 0.5rem;"><i class="fas fa-phone" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> +1(437) 993-1626</p>
-                <p style="margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> Oshawa, ON</p>
-                <p style="margin-bottom: 0.5rem;"><i class="fas fa-envelope" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> info@boithokkhana.ca</p>
+                <p style="margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> 7 Simcoe St South, Oshawa, ON</p>
+                <p style="margin-bottom: 0.5rem;"><i class="fas fa-envelope" style="color: var(--golden-yellow); margin-right: 0.5rem;"></i> bkfoodformulaz@gmail.com</p>
             </div>
             
             <div class="footer-section">
@@ -1171,6 +1500,7 @@
                     <li><a href="#" onclick="showPage('home')" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s;">Home</a></li>
                     <li><a href="#" onclick="showPage('gallery')" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s;">Gallery</a></li>
                     <li><a href="#" onclick="showPage('menu')" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s;">Menu</a></li>
+                    <li><a href="#" onclick="showPage('weekly')" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s;">Weekly Meal</a></li>
                     <li><a href="#" onclick="showPage('contact')" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s;">Contact</a></li>
                     <li><a href="/order" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s;">Order Now</a></li>
                 </ul>

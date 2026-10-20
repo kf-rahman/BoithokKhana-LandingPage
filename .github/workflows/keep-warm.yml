@@ -1,0 +1,46 @@
+# Keeps the Render free-plan services awake during the hours customers
+# actually visit, so nobody lands on Render's "spinning up" page.
+#
+# WHY A WINDOW AND NOT 24/7: a Render workspace gets 750 free instance hours
+# per calendar month, SHARED across every free service in the workspace.
+# Pinging the web service round the clock costs 744h on its own and leaves
+# nothing for the API — blow the quota and Render SUSPENDS every free service
+# until the next calendar month. The window below is 11 hours/day:
+#
+#   web only:     11 h/day x 31 = 341 h   (of 750)
+#   web + api:    11 h/day x 2 x 31 = 682 h
+#
+# So there is room to warm the API too (uncomment it in scripts/keep-warm.sh)
+# but NOT room to widen the window much. Redo this arithmetic before you
+# change the cron. If both services move to a paid plan, delete this
+# workflow — paid instances never sleep.
+#
+# Times are UTC (GitHub cron has no timezone). 15:00–01:59 UTC is roughly
+# 11am–10pm in Toronto, give or take the daylight-saving hour.
+
+name: Keep site warm
+
+on:
+  schedule:
+    - cron: "*/10 15-23,0-1 * * *"
+  # So you can prod it by hand from the Actions tab (e.g. right before
+  # sharing the link with someone).
+  workflow_dispatch:
+
+# Two runs overlapping would just waste minutes pinging the same URLs.
+concurrency:
+  group: keep-warm
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # A failure here means the site is actually down (every target was
+      # retried through a full cold start), so let the run go red — that's
+      # the notification.
+      - name: Ping the site
+        run: ./scripts/keep-warm.sh
